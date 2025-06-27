@@ -1,71 +1,120 @@
-const crypto = require('crypto');
-const { config } = require('../../lib/config');
+const { WebClient } = require("@slack/web-api");
+const { buffer } = require("micro");
+const crypto = require("crypto");
 
-module.exports = async (req, res) => {
-  // Verify the request is from Slack
-  const signature = req.headers['x-slack-signature'];
-  const timestamp = req.headers['x-slack-request-timestamp'];
-  const body = JSON.stringify(req.body);
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
-  // Check if we have Slack signing secret
-  if (!config.SLACK_SIGNING_SECRET) {
-    console.warn('SLACK_SIGNING_SECRET not configured');
-    return res.status(503).json({ error: 'Service not configured' });
-  }
+export default async function handler(req, res) {
+  try {
+    // Load environment variables inside the handler
+    const slackToken = process.env.SLACK_BOT_TOKEN;
+    const signingSecret = process.env.SLACK_SIGNING_SECRET;
 
-  // Verify timestamp (must be within 5 minutes)
-  const time = Math.floor(new Date().getTime() / 1000);
-  if (Math.abs(time - timestamp) > 300) {
-    return res.status(400).json({ error: 'Request timeout' });
-  }
+    // Log environment variable status (without exposing the actual values)
+    console.log("=== SLACK HANDLER STARTED ===");
+    console.log("Deployment timestamp:", new Date().toISOString());
+    console.log("SLACK_BOT_TOKEN exists:", !!slackToken);
+    console.log("SLACK_SIGNING_SECRET exists:", !!signingSecret);
+    console.log("Request method:", req.method);
+    console.log("Request URL:", req.url);
 
-  // Verify signature
-  const sigBasestring = 'v0:' + timestamp + ':' + body;
-  const mySignature = 'v0=' + crypto
-    .createHmac('sha256', config.SLACK_SIGNING_SECRET)
-    .update(sigBasestring, 'utf8')
-    .digest('hex');
-
-  if (crypto.timingSafeEqual(
-    Buffer.from(mySignature, 'utf8'),
-    Buffer.from(signature, 'utf8')
-  )) {
-    // Handle URL verification challenge
-    if (req.body.type === 'url_verification') {
-      return res.status(200).json({ challenge: req.body.challenge });
+    // Handle GET requests (health check)
+    if (req.method === "GET") {
+      return res.status(200).json({ 
+        status: "ok",
+        message: "Slack event handler is running",
+        timestamp: new Date().toISOString(),
+        env: {
+          SLACK_BOT_TOKEN: !!slackToken ? "configured" : "missing",
+          SLACK_SIGNING_SECRET: !!signingSecret ? "configured" : "missing"
+        }
+      });
     }
 
-    // Handle events
-    if (req.body.type === 'event_callback') {
-      const event = req.body.event;
-      
-      console.log('Received event:', event.type);
-      
-      // TODO: Handle different event types
-      switch (event.type) {
-        case 'app_home_opened':
-          console.log('App home opened by user:', event.user);
-          break;
-        case 'member_joined_channel':
-          console.log('Paper added to channel:', event.channel);
-          // TODO: Create initial Canvas
-          break;
-        case 'message':
-          console.log('New message in channel:', event.channel);
-          // TODO: Update Canvas
-          break;
-        case 'app_mention':
-          console.log('Paper mentioned in channel:', event.channel);
-          break;
+    // Check if required environment variables are set
+    if (!slackToken || !signingSecret) {
+      console.error("Missing required environment variables");
+      return res.status(500).json({
+        error: "Configuration error",
+        details: {
+          SLACK_BOT_TOKEN: !!slackToken ? "configured" : "missing",
+          SLACK_SIGNING_SECRET: !!signingSecret ? "configured" : "missing"
+        }
+      });
+    }
+
+    const rawBody = await buffer(req);
+    const signature = req.headers["x-slack-signature"];
+    const timestamp = req.headers["x-slack-request-timestamp"];
+
+    // Verify Slack signature
+    if (!signature || !timestamp) {
+      console.error("Missing Slack signature headers");
+      return res.status(400).send("Missing required headers");
+    }
+
+    const hmac = crypto.createHmac("sha256", String(signingSecret));
+    const [version, hash] = signature.split("=");
+    hmac.update(`v0:${timestamp}:${rawBody.toString()}`);
+    const digest = hmac.digest("hex");
+
+    if (!crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(digest))) {
+      return res.status(400).send("Verification failed");
+    }
+
+    const body = JSON.parse(rawBody.toString());
+
+    // Handle URL verification
+    if (body.type === "url_verification") {
+      return res.status(200).json({ challenge: body.challenge });
+    }
+
+    // Handle app mentions
+    if (
+      body.event &&
+      body.event.type === "app_mention" &&
+      !body.event.subtype // ignore bot messages
+    ) {
+      const channel = body.event.channel;
+      const user = body.event.user;
+      const text = body.event.text;
+
+      console.log("=== APP MENTION EVENT RECEIVED ===");
+      console.log("Event type:", body.event.type);
+      console.log("Channel:", channel);
+      console.log("User:", user);
+      console.log("Text:", text);
+      console.log("Full event:", JSON.stringify(body.event, null, 2));
+
+      try {
+        console.log("Attempting to send message to Slack...");
+        const web = new WebClient(slackToken);
+        const result = await web.chat.postMessage({
+          channel,
+          text: `👋 Hello from Paper!`,
+        });
+        
+        console.log("Message sent successfully!");
+        console.log("Message result:", JSON.stringify(result, null, 2));
+      } catch (postError) {
+        console.error("ERROR posting message to Slack:");
+        console.error("Error name:", postError.name);
+        console.error("Error message:", postError.message);
+        console.error("Error code:", postError.code);
+        console.error("Full error:", postError);
       }
-      
-      // Acknowledge event received
-      return res.status(200).json({ ok: true });
-    }
-  } else {
-    return res.status(400).json({ error: 'Invalid signature' });
-  }
 
-  // Default response
-  res.status(200).json({ ok: true });
-}; 
+      return res.status(200).end();
+    }
+
+    // Fallback for any other events
+    return res.status(200).end();
+  } catch (error) {
+    console.error("Error in events.js handler:", error);
+    return res.status(500).send("Internal Server Error");
+  }
+}
