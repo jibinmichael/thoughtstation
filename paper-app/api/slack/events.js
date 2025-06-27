@@ -77,12 +77,12 @@ async function handleBotJoinChannel(web, channelId, botUserId) {
 
     // Send welcome message with canvas info
     try {
-      let messageText = `👋 Hello! I'm Paper, your AI assistant. I'm ready to help in #${channelName}!`;
+      let messageText = `🚀 NEW CODE ACTIVE! Hello! I'm Paper, your AI assistant. I'm ready to help in #${channelName}!`;
       
       if (canvasCreated && canvasPreview) {
-        messageText = `👋 Hello! I'm Paper, your AI assistant. I'm ready to help in #${channelName}!\n\n📋 I've created a canvas for this channel: "*${canvasPreview.title}*"\n🔗 <${canvasPreview.url}|View Canvas>\n\nMention me with @Paper anytime you need help! 🤖`;
+        messageText = `🚀 NEW CODE ACTIVE! Hello! I'm Paper, your AI assistant. I'm ready to help in #${channelName}!\n\n📋 I've created a canvas for this channel: "*${canvasPreview.title}*"\n🔗 <${canvasPreview.url}|View Canvas>\n\nMention me with @Paper anytime you need help! 🤖`;
       } else if (canvasCreated && canvasId) {
-        messageText = `👋 Hello! I'm Paper, your AI assistant. I'm ready to help in #${channelName}!\n\n📋 I've created a canvas for this channel: "*Paper - #${channelName}*" (ID: ${canvasId})\n\nMention me with @Paper anytime you need help! 🤖`;
+        messageText = `🚀 NEW CODE ACTIVE! Hello! I'm Paper, your AI assistant. I'm ready to help in #${channelName}!\n\n📋 I've created a canvas for this channel: "*Paper - #${channelName}*" (Canvas ID: ${canvasId})\n\nMention me with @Paper anytime you need help! 🤖`;
       }
 
       const result = await web.chat.postMessage({
@@ -90,7 +90,7 @@ async function handleBotJoinChannel(web, channelId, botUserId) {
         text: messageText
       });
       
-      console.log("Welcome message sent successfully");
+      console.log("NEW CODE: Welcome message sent successfully");
       
     } catch (messageError) {
       console.error("Failed to send welcome message:", messageError.message);
