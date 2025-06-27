@@ -17,6 +17,7 @@ export default async function handler(req, res) {
   try {
     // Log environment variable status (without exposing the actual values)
     console.log("=== SLACK HANDLER STARTED ===");
+    console.log("Deployment timestamp:", new Date().toISOString());
     console.log("SLACK_BOT_TOKEN exists:", !!slackToken);
     console.log("SLACK_SIGNING_SECRET exists:", !!signingSecret);
     console.log("Request method:", req.method);
