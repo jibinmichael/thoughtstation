@@ -13,6 +13,7 @@ export const config = {
 
 // Helper function to handle bot joining a channel
 async function handleBotJoinChannel(web, channelId, botUserId) {
+  console.log("🚀🚀🚀 HANDLEBOT JOIN CHANNEL FUNCTION CALLED 🚀🚀🚀");
   console.log("=== BOT JOINED CHANNEL ===");
   console.log("Channel ID:", channelId);
   console.log("Bot User ID:", botUserId);
@@ -186,6 +187,8 @@ export default async function handler(req, res) {
       body.event.type === "member_joined_channel" &&
       (body.event.user === botUserId || !botUserId) // Handle case where we can't get bot ID
     ) {
+      console.log("🚀 TRIGGERING handleBotJoinChannel for member_joined_channel");
+      console.log("Event user:", body.event.user, "Bot user:", botUserId);
       await handleBotJoinChannel(web, body.event.channel, botUserId);
       return res.status(200).end();
     }
@@ -197,6 +200,9 @@ export default async function handler(req, res) {
       body.event.subtype === "channel_join" &&
       (body.event.user === botUserId || (!botUserId && body.event.text && body.event.text.includes("joined")))
     ) {
+      console.log("🚀 TRIGGERING handleBotJoinChannel for channel_join message");
+      console.log("Event user:", body.event.user, "Bot user:", botUserId);
+      console.log("Canvas store check:", canvasStore[body.event.channel] ? "already exists" : "creating new");
       // Only handle if we haven't already processed this channel
       if (!canvasStore[body.event.channel]) {
         await handleBotJoinChannel(web, body.event.channel, botUserId);
@@ -258,6 +264,7 @@ export default async function handler(req, res) {
     console.log("=== EVENT RECEIVED ===");
     console.log("Event type:", body.event?.type);
     console.log("Event subtype:", body.event?.subtype);
+    console.log("Full event details:", JSON.stringify(body.event, null, 2));
 
     return res.status(200).end();
   } catch (error) {
