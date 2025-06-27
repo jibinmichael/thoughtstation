@@ -1,0 +1,25 @@
+{
+  "framework": null,
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/slack/events",
+      "destination": "/api/slack/events"
+    },
+    {
+      "source": "/slack/oauth",
+      "destination": "/api/slack/oauth"
+    },
+    {
+      "source": "/slack/install",
+      "destination": "/api/slack/install"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+} 

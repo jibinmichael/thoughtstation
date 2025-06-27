@@ -1,0 +1,14 @@
+# Vercel Environment Variables Template
+
+## REQUIRED FOR INITIAL DEPLOY:
+MONGODB_URI=your_mongodb_connection_string
+ENCRYPTION_KEY=your_64_character_hex_key
+OPENAI_API_KEY=your_openai_api_key
+
+## CAN BE ADDED AFTER SLACK APP CREATION:
+SLACK_CLIENT_ID=will_get_from_slack_app
+SLACK_CLIENT_SECRET=will_get_from_slack_app  
+SLACK_SIGNING_SECRET=will_get_from_slack_app
+
+## ADD AFTER FIRST DEPLOY:
+APP_URL=https://your-project.vercel.app 
