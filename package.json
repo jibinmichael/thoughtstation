@@ -13,20 +13,27 @@
     "lint": "eslint .",
     "format": "prettier --write ."
   },
-  "keywords": ["slack", "canvas", "ai", "serverless", "vercel"],
+  "keywords": [
+    "slack",
+    "canvas",
+    "ai",
+    "serverless",
+    "vercel"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "@slack/bolt": "^3.17.1",
     "@slack/web-api": "^7.0.2",
+    "@upstash/ratelimit": "^1.0.1",
+    "@upstash/redis": "^1.28.3",
     "@vercel/node": "^3.0.17",
-    "mongodb": "^6.3.0",
-    "openai": "^4.28.0",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
-    "zod": "^3.22.4",
-    "@upstash/redis": "^1.28.3",
-    "@upstash/ratelimit": "^1.0.1"
+    "micro": "^10.0.1",
+    "mongodb": "^6.3.0",
+    "openai": "^4.28.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
@@ -38,4 +45,4 @@
   "engines": {
     "node": ">=18.0.0"
   }
-} 
+}
