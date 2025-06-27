@@ -2,11 +2,6 @@ import { WebClient } from "@slack/web-api";
 import { buffer } from "micro";
 import crypto from "crypto";
 
-const slackToken = process.env.SLACK_BOT_TOKEN;
-const signingSecret = process.env.SLACK_SIGNING_SECRET;
-
-const web = new WebClient(slackToken);
-
 export const config = {
   api: {
     bodyParser: false,
@@ -15,6 +10,10 @@ export const config = {
 
 export default async function handler(req, res) {
   try {
+    // Load environment variables inside the handler
+    const slackToken = process.env.SLACK_BOT_TOKEN;
+    const signingSecret = process.env.SLACK_SIGNING_SECRET;
+
     // Log environment variable status (without exposing the actual values)
     console.log("=== SLACK HANDLER STARTED ===");
     console.log("Deployment timestamp:", new Date().toISOString());
@@ -93,6 +92,7 @@ export default async function handler(req, res) {
 
       try {
         console.log("Attempting to send message to Slack...");
+        const web = new WebClient(slackToken);
         const result = await web.chat.postMessage({
           channel,
           text: `👋 Hello from Paper!`,
