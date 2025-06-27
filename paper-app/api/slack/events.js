@@ -36,12 +36,29 @@ export default async function handler(req, res) {
       });
     }
 
+    // Check if required environment variables are set
+    if (!slackToken || !signingSecret) {
+      console.error("Missing required environment variables");
+      return res.status(500).json({
+        error: "Configuration error",
+        details: {
+          SLACK_BOT_TOKEN: !!slackToken ? "configured" : "missing",
+          SLACK_SIGNING_SECRET: !!signingSecret ? "configured" : "missing"
+        }
+      });
+    }
+
     const rawBody = await buffer(req);
     const signature = req.headers["x-slack-signature"];
     const timestamp = req.headers["x-slack-request-timestamp"];
 
     // Verify Slack signature
-    const hmac = crypto.createHmac("sha256", signingSecret);
+    if (!signature || !timestamp) {
+      console.error("Missing Slack signature headers");
+      return res.status(400).send("Missing required headers");
+    }
+
+    const hmac = crypto.createHmac("sha256", String(signingSecret));
     const [version, hash] = signature.split("=");
     hmac.update(`v0:${timestamp}:${rawBody.toString()}`);
     const digest = hmac.digest("hex");
