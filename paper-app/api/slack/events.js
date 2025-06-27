@@ -23,6 +23,19 @@ export default async function handler(req, res) {
     console.log("Request method:", req.method);
     console.log("Request URL:", req.url);
 
+    // Handle GET requests (health check)
+    if (req.method === "GET") {
+      return res.status(200).json({ 
+        status: "ok",
+        message: "Slack event handler is running",
+        timestamp: new Date().toISOString(),
+        env: {
+          SLACK_BOT_TOKEN: !!slackToken ? "configured" : "missing",
+          SLACK_SIGNING_SECRET: !!signingSecret ? "configured" : "missing"
+        }
+      });
+    }
+
     const rawBody = await buffer(req);
     const signature = req.headers["x-slack-signature"];
     const timestamp = req.headers["x-slack-request-timestamp"];
