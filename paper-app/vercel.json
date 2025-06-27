@@ -1,0 +1,11 @@
+{
+    "version": 2,
+    "builds": [
+      { "src": "api/slack/*.js", "use": "@vercel/node" }
+    ],
+    "routes": [
+      { "src": "/api/slack/oauth", "dest": "/api/slack/oauth.js" },
+      { "src": "/api/slack/events", "dest": "/api/slack/events.js" }
+    ]
+  }
+  
