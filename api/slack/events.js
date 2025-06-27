@@ -2,6 +2,9 @@ const { WebClient } = require("@slack/web-api");
 const { buffer } = require("micro");
 const crypto = require("crypto");
 
+// In-memory storage for canvas IDs
+const canvasStore = {};
+
 export const config = {
   api: {
     bodyParser: false,
@@ -73,6 +76,85 @@ export default async function handler(req, res) {
       return res.status(200).json({ challenge: body.challenge });
     }
 
+    // Initialize WebClient
+    const web = new WebClient(slackToken);
+
+    // Get bot's user ID using auth.test
+    let botUserId = null;
+    try {
+      const authResult = await web.auth.test();
+      botUserId = authResult.user_id;
+      console.log("Bot user ID:", botUserId);
+    } catch (error) {
+      console.error("Failed to get bot user ID:", error.message);
+    }
+
+    // Handle member_joined_channel event
+    if (
+      body.event &&
+      body.event.type === "member_joined_channel" &&
+      body.event.user === botUserId
+    ) {
+      const channelId = body.event.channel;
+      
+      console.log("=== BOT JOINED CHANNEL ===");
+      console.log("Channel ID:", channelId);
+      console.log("Bot User ID:", botUserId);
+
+      try {
+        // Get channel info to get the channel name
+        const channelInfo = await web.conversations.info({
+          channel: channelId
+        });
+        
+        const channelName = channelInfo.channel.name;
+        console.log("Channel name:", channelName);
+
+        // Attempt to create canvas
+        // Note: canvases.create might not be available in the current API
+        try {
+          console.log("Attempting to create canvas...");
+          
+          // Check if canvases API exists
+          if (web.canvases && web.canvases.create) {
+            const canvasResult = await web.canvases.create({
+              title: `Paper - #${channelName}`,
+              channel: channelId
+            });
+            
+            const canvasId = canvasResult.canvas_id || canvasResult.id;
+            canvasStore[channelId] = canvasId;
+            
+            console.log("Created canvas:", canvasId);
+            console.log("Canvas store:", canvasStore);
+          } else {
+            console.log("Canvas API not available - web.canvases.create is not a function");
+            console.log("Available methods:", Object.keys(web));
+            
+            // Fallback: Post a message about canvas creation
+            await web.chat.postMessage({
+              channel: channelId,
+              text: `👋 Hello! I'm Paper, your AI assistant. Canvas creation is not yet available through the API, but I'm here to help!`
+            });
+          }
+        } catch (canvasError) {
+          console.error("Failed to create canvas:", canvasError.message);
+          console.error("Canvas error details:", canvasError);
+          
+          // Fallback message
+          await web.chat.postMessage({
+            channel: channelId,
+            text: `👋 Hello! I'm Paper, your AI assistant. I'm ready to help in this channel!`
+          });
+        }
+      } catch (error) {
+        console.error("Error handling bot channel join:", error.message);
+        console.error("Full error:", error);
+      }
+
+      return res.status(200).end();
+    }
+
     // Handle app mentions
     if (
       body.event &&
@@ -92,7 +174,6 @@ export default async function handler(req, res) {
 
       try {
         console.log("Attempting to send message to Slack...");
-        const web = new WebClient(slackToken);
         const result = await web.chat.postMessage({
           channel,
           text: `👋 Hello from Paper!`,
