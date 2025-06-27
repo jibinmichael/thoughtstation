@@ -204,6 +204,82 @@ export default async function handler(req, res) {
       return res.status(200).end();
     }
 
+    // Handle channel_join (when bot joins a channel)
+    if (
+      body.event &&
+      body.event.type === "message" &&
+      body.event.subtype === "channel_join" &&
+      body.event.user === botUserId
+    ) {
+      const channelId = body.event.channel;
+      
+      console.log("=== BOT JOINED CHANNEL (channel_join) ===");
+      console.log("Channel ID:", channelId);
+      console.log("User ID:", body.event.user);
+      console.log("Bot User ID:", botUserId);
+
+      try {
+        // Get channel info to get the channel name
+        const channelInfo = await web.conversations.info({
+          channel: channelId
+        });
+        
+        const channelName = channelInfo.channel.name;
+        console.log("Channel name:", channelName);
+
+        // Attempt to create canvas
+        try {
+          console.log("Attempting to create canvas...");
+          
+          // Check if canvases API exists
+          if (web.canvases && web.canvases.create) {
+            const canvasResult = await web.canvases.create({
+              title: `Paper - #${channelName}`,
+              channel: channelId
+            });
+            
+            const canvasId = canvasResult.canvas_id || canvasResult.id;
+            canvasStore[channelId] = canvasId;
+            
+            console.log("Created canvas:", canvasId);
+            console.log("Canvas store:", canvasStore);
+            
+            // Post a message about the canvas
+            await web.chat.postMessage({
+              channel: channelId,
+              text: `📝 I've created a canvas for this channel: "Paper - #${channelName}"`
+            });
+          } else {
+            console.log("Canvas API not available - web.canvases.create is not a function");
+            
+            // List available methods for debugging
+            const availableMethods = Object.keys(web).filter(key => typeof web[key] === 'object');
+            console.log("Available API methods:", availableMethods.join(', '));
+            
+            // Fallback: Post a welcome message
+            await web.chat.postMessage({
+              channel: channelId,
+              text: `👋 Hello! I'm Paper, your AI assistant. I'm ready to help in #${channelName}!`
+            });
+          }
+        } catch (canvasError) {
+          console.error("Failed to create canvas:", canvasError.message);
+          console.error("Canvas error details:", canvasError);
+          
+          // Fallback message
+          await web.chat.postMessage({
+            channel: channelId,
+            text: `👋 Hello! I'm Paper, your AI assistant. I'm ready to help in #${channelName}!`
+          });
+        }
+      } catch (error) {
+        console.error("Error handling bot channel join:", error.message);
+        console.error("Full error:", error);
+      }
+
+      return res.status(200).end();
+    }
+
     // Handle app mentions
     if (
       body.event &&
