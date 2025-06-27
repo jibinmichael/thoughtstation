@@ -2,7 +2,7 @@ const { WebClient } = require("@slack/web-api");
 const { buffer } = require("micro");
 const crypto = require("crypto");
 
-// In-memory storage for canvas IDs
+// Canvas storage
 const canvasStore = {};
 
 export const config = {
@@ -11,38 +11,34 @@ export const config = {
   },
 };
 
-// Helper function to handle bot joining a channel
-async function handleBotJoinChannel(web, channelId, botUserId) {
-  console.log("🚀🚀🚀 HANDLEBOT JOIN CHANNEL FUNCTION CALLED 🚀🚀🚀");
-  console.log("=== BOT JOINED CHANNEL ===");
-  console.log("Channel ID:", channelId);
-  console.log("Bot User ID:", botUserId);
+// UNIFIED bot join handler
+async function createWelcomeForChannel(web, channelId, botUserId) {
+  console.log("🎯 UNIFIED HANDLER STARTED 🎯");
+  console.log("Creating welcome for channel:", channelId);
+  console.log("Bot user ID:", botUserId);
 
   try {
-    // Get channel info to get the channel name
-    let channelName = channelId; // fallback to ID
+    // Get channel name
+    let channelName = channelId;
     try {
-      const channelInfo = await web.conversations.info({
-        channel: channelId
-      });
+      const channelInfo = await web.conversations.info({ channel: channelId });
       channelName = channelInfo.channel.name;
-      console.log("Channel name:", channelName);
-    } catch (channelError) {
-      console.log("Could not get channel name, using ID:", channelError.message);
+      console.log("✅ Channel name retrieved:", channelName);
+    } catch (err) {
+      console.log("⚠️ Could not get channel name:", err.message);
     }
 
-    // Attempt to create canvas
-    let canvasCreated = false;
+    // Create canvas
     let canvasId = null;
+    let canvasCreated = false;
     
     try {
-      console.log("Attempting to create canvas...");
-      
+      console.log("🎨 Creating canvas...");
       const canvasResult = await web.canvases.create({
         title: `Paper - #${channelName}`,
         document_content: {
           type: "markdown",
-          markdown: `# Welcome to Paper!\n\nThis is your AI assistant canvas for **#${channelName}**.\n\n## What I can help with:\n- Answer questions\n- Organize information\n- Take notes\n- And much more!\n\nJust mention me with @Paper and I'll be happy to help! 🤖`
+          markdown: `# Welcome to Paper! 🤖\n\nThis is your AI assistant canvas for **#${channelName}**.\n\n## What I can help with:\n- Answer questions\n- Organize information\n- Take notes\n- Collaborate on ideas\n\nJust mention me with @Paper and I'll be happy to help! ✨`
         }
       });
       
@@ -50,105 +46,88 @@ async function handleBotJoinChannel(web, channelId, botUserId) {
       canvasStore[channelId] = canvasId;
       canvasCreated = true;
       
-      console.log("Created canvas:", canvasId);
-      console.log("Canvas store:", canvasStore);
+      console.log("✅ Canvas created successfully:", canvasId);
+      console.log("📊 Canvas store updated:", canvasStore);
       
     } catch (canvasError) {
-      console.log("Canvas creation failed:", canvasError.message);
-      canvasCreated = false;
+      console.log("❌ Canvas creation failed:", canvasError.message);
     }
 
-    // Get canvas preview if created successfully
-    let canvasPreview = null;
+    // Get canvas preview URL
+    let canvasUrl = null;
     if (canvasCreated && canvasId) {
       try {
-        const canvasInfo = await web.canvases.access.get({
-          canvas_id: canvasId
-        });
-        canvasPreview = {
-          title: canvasInfo.title,
-          url: canvasInfo.url || `https://slack.com/canvas/${canvasId}`,
-          id: canvasId
-        };
-        console.log("Canvas preview:", canvasPreview);
-      } catch (previewError) {
-        console.log("Could not get canvas preview:", previewError.message);
+        const canvasInfo = await web.canvases.access.get({ canvas_id: canvasId });
+        canvasUrl = canvasInfo.url || `https://slack.com/canvas/${canvasId}`;
+        console.log("🔗 Canvas URL retrieved:", canvasUrl);
+      } catch (urlError) {
+        console.log("⚠️ Could not get canvas URL:", urlError.message);
       }
     }
 
-    // Send welcome message with canvas info
-    try {
-      let messageText = `🚀 NEW CODE ACTIVE! Hello! I'm Paper, your AI assistant. I'm ready to help in #${channelName}!`;
-      
-      if (canvasCreated && canvasPreview) {
-        messageText = `🚀 NEW CODE ACTIVE! Hello! I'm Paper, your AI assistant. I'm ready to help in #${channelName}!\n\n📋 I've created a canvas for this channel: "*${canvasPreview.title}*"\n🔗 <${canvasPreview.url}|View Canvas>\n\nMention me with @Paper anytime you need help! 🤖`;
-      } else if (canvasCreated && canvasId) {
-        messageText = `🚀 NEW CODE ACTIVE! Hello! I'm Paper, your AI assistant. I'm ready to help in #${channelName}!\n\n📋 I've created a canvas for this channel: "*Paper - #${channelName}*" (Canvas ID: ${canvasId})\n\nMention me with @Paper anytime you need help! 🤖`;
+    // Send unified welcome message
+    let message = `🚀 **NEW CODE ACTIVE!** Hello! I'm Paper, your AI assistant. I'm ready to help in #${channelName}! 🤖`;
+    
+    if (canvasCreated) {
+      message += `\n\n🎨 I've created a canvas for this channel: "*Paper - #${channelName}*"`;
+      if (canvasUrl) {
+        message += `\n🔗 <${canvasUrl}|View Canvas>`;
+      } else {
+        message += `\n📋 Canvas ID: ${canvasId}`;
       }
+      message += `\n\n✨ Mention me with @Paper anytime you need help!`;
+    }
 
+    try {
       const result = await web.chat.postMessage({
         channel: channelId,
-        text: messageText
+        text: message
       });
-      
-      console.log("NEW CODE: Welcome message sent successfully");
-      
-    } catch (messageError) {
-      console.error("Failed to send welcome message:", messageError.message);
+      console.log("✅ Welcome message sent successfully!");
+      console.log("📨 Message timestamp:", result.ts);
+    } catch (msgError) {
+      console.log("❌ Failed to send welcome message:", msgError.message);
     }
 
   } catch (error) {
-    console.error("Error handling bot channel join:", error.message);
+    console.log("💥 Error in welcome handler:", error.message);
   }
 }
 
 export default async function handler(req, res) {
   try {
-    // Load environment variables inside the handler
     const slackToken = process.env.SLACK_BOT_TOKEN;
     const signingSecret = process.env.SLACK_SIGNING_SECRET;
 
-    // Log environment variable status (without exposing the actual values)
-    console.log("=== SLACK HANDLER STARTED ===");
-    console.log("Deployment timestamp:", new Date().toISOString());
-    console.log("SLACK_BOT_TOKEN exists:", !!slackToken);
-    console.log("SLACK_SIGNING_SECRET exists:", !!signingSecret);
-    console.log("Request method:", req.method);
+    console.log("🔥 COMPLETELY NEW HANDLER VERSION 🔥");
+    console.log("⏰ Timestamp:", new Date().toISOString());
+    console.log("🔑 Token exists:", !!slackToken);
+    console.log("🔐 Secret exists:", !!signingSecret);
+    console.log("📨 Method:", req.method);
 
-    // Handle GET requests (health check)
+    // Health check
     if (req.method === "GET") {
       return res.status(200).json({ 
-        status: "ok",
-        message: "Slack event handler is running",
+        status: "NEW VERSION ACTIVE",
+        message: "Completely rewritten event handler",
         timestamp: new Date().toISOString(),
-        canvasStore: canvasStore,
-        env: {
-          SLACK_BOT_TOKEN: !!slackToken ? "configured" : "missing",
-          SLACK_SIGNING_SECRET: !!signingSecret ? "configured" : "missing"
-        }
+        canvasStore: canvasStore
       });
     }
 
-    // Check if required environment variables are set
     if (!slackToken || !signingSecret) {
-      console.error("Missing required environment variables");
-      return res.status(500).json({
-        error: "Configuration error",
-        details: {
-          SLACK_BOT_TOKEN: !!slackToken ? "configured" : "missing",
-          SLACK_SIGNING_SECRET: !!signingSecret ? "configured" : "missing"
-        }
-      });
+      console.log("❌ Missing environment variables");
+      return res.status(500).json({ error: "Configuration error" });
     }
 
+    // Verify request
     const rawBody = await buffer(req);
     const signature = req.headers["x-slack-signature"];
     const timestamp = req.headers["x-slack-request-timestamp"];
 
-    // Verify Slack signature
     if (!signature || !timestamp) {
-      console.error("Missing Slack signature headers");
-      return res.status(400).send("Missing required headers");
+      console.log("❌ Missing signature headers");
+      return res.status(400).send("Missing headers");
     }
 
     const hmac = crypto.createHmac("sha256", String(signingSecret));
@@ -162,50 +141,50 @@ export default async function handler(req, res) {
 
     const body = JSON.parse(rawBody.toString());
 
-    // Handle URL verification
+    // URL verification
     if (body.type === "url_verification") {
       return res.status(200).json({ challenge: body.challenge });
     }
 
-    // Initialize WebClient
     const web = new WebClient(slackToken);
 
-    // Get bot's user ID (with error handling for scope issues)
+    // Get bot user ID
     let botUserId = null;
     try {
       const authResult = await web.auth.test();
       botUserId = authResult.user_id;
-      console.log("Bot user ID:", botUserId);
+      console.log("🤖 Bot user ID:", botUserId);
     } catch (error) {
-      console.log("Could not get bot user ID (scope issue):", error.message);
-      // We'll handle events without bot user ID comparison
+      console.log("⚠️ Could not get bot user ID:", error.message);
     }
 
-    // Handle member_joined_channel event (when bot is added to channel)
+    // Handle bot joining channel
     if (
       body.event &&
       body.event.type === "member_joined_channel" &&
-      (body.event.user === botUserId || !botUserId) // Handle case where we can't get bot ID
+      body.event.user === botUserId
     ) {
-      console.log("🚀 TRIGGERING handleBotJoinChannel for member_joined_channel");
-      console.log("Event user:", body.event.user, "Bot user:", botUserId);
-      await handleBotJoinChannel(web, body.event.channel, botUserId);
+      console.log("🎯 DETECTED: member_joined_channel event");
+      console.log("👤 User:", body.event.user, "🤖 Bot:", botUserId);
+      await createWelcomeForChannel(web, body.event.channel, botUserId);
       return res.status(200).end();
     }
 
-    // Handle channel_join message subtype (alternative way bot joins channel)
+    // Handle channel_join message
     if (
       body.event &&
       body.event.type === "message" &&
       body.event.subtype === "channel_join" &&
-      (body.event.user === botUserId || (!botUserId && body.event.text && body.event.text.includes("joined")))
+      body.event.user === botUserId
     ) {
-      console.log("🚀 TRIGGERING handleBotJoinChannel for channel_join message");
-      console.log("Event user:", body.event.user, "Bot user:", botUserId);
-      console.log("Canvas store check:", canvasStore[body.event.channel] ? "already exists" : "creating new");
-      // Only handle if we haven't already processed this channel
+      console.log("🎯 DETECTED: channel_join message event");
+      console.log("👤 User:", body.event.user, "🤖 Bot:", botUserId);
+      
+      // Prevent duplicates
       if (!canvasStore[body.event.channel]) {
-        await handleBotJoinChannel(web, body.event.channel, botUserId);
+        await createWelcomeForChannel(web, body.event.channel, botUserId);
+      } else {
+        console.log("⚠️ Canvas already exists for this channel");
       }
       return res.status(200).end();
     }
@@ -214,63 +193,59 @@ export default async function handler(req, res) {
     if (
       body.event &&
       body.event.type === "app_mention" &&
-      !body.event.subtype // ignore bot messages
+      !body.event.subtype
     ) {
       const channel = body.event.channel;
       const user = body.event.user;
       const text = body.event.text;
 
-      console.log("=== APP MENTION EVENT RECEIVED ===");
-      console.log("Channel:", channel);
-      console.log("User:", user);
-      console.log("Text:", text);
+      console.log("💬 APP MENTION RECEIVED");
+      console.log("📍 Channel:", channel);
+      console.log("👤 User:", user);
+      console.log("💭 Text:", text);
 
       try {
-        // Check if we have a canvas for this channel
         const canvasId = canvasStore[channel];
-        let responseText = `👋 Hello from Paper!`;
+        let responseText = `👋 Hello from Paper! (NEW VERSION ACTIVE)`;
         
         if (canvasId) {
-          responseText += `\n\n📋 I have a canvas ready for this channel. Canvas ID: ${canvasId}`;
+          responseText += `\n\n🎨 I have a canvas ready for this channel!\n📋 Canvas ID: ${canvasId}`;
           
-          // Try to get canvas URL
           try {
-            const canvasInfo = await web.canvases.access.get({
-              canvas_id: canvasId
-            });
+            const canvasInfo = await web.canvases.access.get({ canvas_id: canvasId });
             if (canvasInfo.url) {
               responseText += `\n🔗 <${canvasInfo.url}|View Canvas>`;
             }
           } catch (canvasError) {
-            console.log("Could not get canvas URL:", canvasError.message);
+            console.log("⚠️ Could not get canvas URL:", canvasError.message);
           }
         }
         
-        const result = await web.chat.postMessage({
+        await web.chat.postMessage({
           channel,
           text: responseText,
         });
         
-        console.log("Message sent successfully!");
+        console.log("✅ Mention response sent!");
         
       } catch (postError) {
-        console.error("ERROR posting message to Slack:", postError.message);
+        console.log("❌ Error responding to mention:", postError.message);
       }
 
       return res.status(200).end();
     }
 
-    // Log all other events for debugging
-    console.log("=== EVENT RECEIVED ===");
-    console.log("Event type:", body.event?.type);
-    console.log("Event subtype:", body.event?.subtype);
-    console.log("Full event details:", JSON.stringify(body.event, null, 2));
+    // Log all other events
+    console.log("📝 OTHER EVENT RECEIVED");
+    console.log("🔍 Type:", body.event?.type);
+    console.log("🏷️ Subtype:", body.event?.subtype);
+    console.log("📄 Event details:", JSON.stringify(body.event, null, 2));
 
     return res.status(200).end();
   } catch (error) {
-    console.error("Error in events.js handler:", error);
+    console.log("💥 Handler error:", error);
     return res.status(500).send("Internal Server Error");
   }
 }
-// Force redeploy - Fri Jun 27 15:33:48 IST 2025
-// Force deployment - 1751019826
+
+// Timestamp: 1751020826
