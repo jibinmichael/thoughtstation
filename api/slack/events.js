@@ -155,6 +155,55 @@ export default async function handler(req, res) {
       return res.status(200).end();
     }
 
+    // Handle bot_added to channel (alternative event)
+    if (
+      body.event &&
+      body.event.type === "message" &&
+      body.event.subtype === "bot_add" &&
+      body.event.bot_id
+    ) {
+      console.log("=== BOT_ADD EVENT DETECTED ===");
+      console.log("Event:", JSON.stringify(body.event, null, 2));
+      
+      // Check if this is our bot
+      try {
+        const botInfo = await web.bots.info({ bot: body.event.bot_id });
+        if (botInfo.bot.user_id === botUserId) {
+          const channelId = body.event.channel;
+          console.log("Our bot was added to channel:", channelId);
+          
+          // Try to create canvas
+          try {
+            const channelInfo = await web.conversations.info({ channel: channelId });
+            const channelName = channelInfo.channel.name;
+            
+            console.log("Attempting canvas creation for channel:", channelName);
+            
+            // Check if canvases API exists
+            if (web.canvases && web.canvases.create) {
+              const canvasResult = await web.canvases.create({
+                title: `Paper - #${channelName}`,
+                channel: channelId
+              });
+              
+              const canvasId = canvasResult.canvas_id || canvasResult.id;
+              canvasStore[channelId] = canvasId;
+              
+              console.log("Created canvas:", canvasId);
+            } else {
+              console.log("Canvas API not available");
+            }
+          } catch (error) {
+            console.error("Error in bot_add handler:", error.message);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking bot info:", error.message);
+      }
+      
+      return res.status(200).end();
+    }
+
     // Handle app mentions
     if (
       body.event &&
@@ -190,6 +239,14 @@ export default async function handler(req, res) {
       }
 
       return res.status(200).end();
+    }
+
+    // Log all events for debugging
+    console.log("=== EVENT RECEIVED ===");
+    console.log("Event type:", body.event?.type);
+    console.log("Event subtype:", body.event?.subtype);
+    if (body.event?.type === "message" && body.event?.subtype) {
+      console.log("Message subtype details:", JSON.stringify(body.event, null, 2));
     }
 
     // Fallback for any other events
