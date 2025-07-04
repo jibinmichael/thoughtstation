@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // Soundscape frequencies for Web Audio API
-const soundscapeFrequencies = [200, 300, 250, 150, 400]; // Rain, Forest, Ocean, Fire, Birds
+const soundscapeFrequencies = [0, 200, 300, 250, 150, 400]; // None, Rain, Forest, Ocean, Fire, Birds
 
 interface PomodoroWidgetProps {
   onClose: () => void;
@@ -146,6 +146,7 @@ const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ onClose, onTimerStateCh
 
   // Soundscapes
   const soundscapes = [
+    { name: 'None', emoji: '🔇' },
     { name: 'Rain', emoji: '🌧️' },
     { name: 'Forest', emoji: '🌲' },
     { name: 'Ocean', emoji: '🌊' },
@@ -157,7 +158,7 @@ const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ onClose, onTimerStateCh
   const handleMusicPlayback = useCallback((shouldPlay: boolean) => {
     if (!audioContextRef.current) return;
     
-    if (shouldPlay) {
+    if (shouldPlay && soundscapeFrequencies[selectedSoundscape] > 0) {
       // Stop any existing oscillator
       if (oscillatorRef.current) {
         oscillatorRef.current.stop();
@@ -186,12 +187,16 @@ const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ onClose, onTimerStateCh
       
       console.log(`Playing soundscape ${selectedSoundscape} at ${soundscapeFrequencies[selectedSoundscape]}Hz`);
     } else {
-      // Stop playing
+      // Stop playing (either paused or "None" selected)
       if (oscillatorRef.current) {
         oscillatorRef.current.stop();
         oscillatorRef.current = null;
       }
-      console.log('Music stopped');
+      if (soundscapeFrequencies[selectedSoundscape] === 0) {
+        console.log('Soundscape: None (silent)');
+      } else {
+        console.log('Music stopped');
+      }
     }
   }, [selectedSoundscape]);
 
