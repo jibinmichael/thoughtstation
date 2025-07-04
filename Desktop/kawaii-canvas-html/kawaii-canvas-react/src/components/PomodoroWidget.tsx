@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+// Soundscape audio URLs (using royalty-free nature sounds)
+const soundscapeAudio = [
+  'https://www.soundjay.com/misc/sounds/rain-01.wav', // Rain
+  'https://www.soundjay.com/misc/sounds/forest-01.wav', // Forest
+  'https://www.soundjay.com/misc/sounds/ocean-01.wav', // Ocean
+  'https://www.soundjay.com/misc/sounds/fire-01.wav', // Fire
+  'https://www.soundjay.com/misc/sounds/birds-01.wav', // Birds
+];
+
 interface PomodoroWidgetProps {
   onClose: () => void;
   onTimerStateChange: (running: boolean) => void;
@@ -20,6 +29,7 @@ const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ onClose, onTimerStateCh
   // Audio elements
   const tickAudioRef = useRef<HTMLAudioElement | null>(null);
   const completeAudioRef = useRef<HTMLAudioElement | null>(null);
+  const musicAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Notify parent when timer running state changes
   useEffect(() => {
@@ -30,12 +40,25 @@ const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ onClose, onTimerStateCh
   useEffect(() => {
     tickAudioRef.current = new Audio('https://www.soundjay.com/misc/sounds/clock-ticking-4.wav');
     completeAudioRef.current = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.wav');
+    
+    // Initialize music audio with first soundscape
+    musicAudioRef.current = new Audio(soundscapeAudio[0]);
+    
     if (tickAudioRef.current) tickAudioRef.current.volume = 0.3;
     if (completeAudioRef.current) completeAudioRef.current.volume = 0.5;
+    if (musicAudioRef.current) {
+      musicAudioRef.current.volume = 0.4;
+      musicAudioRef.current.loop = true; // Loop the music
+    }
     
     return () => {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
+      }
+      // Stop music when component unmounts
+      if (musicAudioRef.current) {
+        musicAudioRef.current.pause();
+        musicAudioRef.current.currentTime = 0;
       }
     };
   }, []);
@@ -135,6 +158,40 @@ const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ onClose, onTimerStateCh
     { name: 'Fire', emoji: '🔥' },
     { name: 'Birds', emoji: '🐦' }
   ];
+
+  // Music control function
+  const handleMusicPlayback = (shouldPlay: boolean) => {
+    if (!musicAudioRef.current) return;
+    
+    if (shouldPlay) {
+      musicAudioRef.current.play().catch(() => {
+        // Handle autoplay restrictions gracefully
+        console.log('Music autoplay blocked by browser');
+      });
+    } else {
+      musicAudioRef.current.pause();
+    }
+  };
+
+  // Update music when soundscape changes
+  useEffect(() => {
+    if (musicAudioRef.current) {
+      const wasPlaying = !musicAudioRef.current.paused;
+      musicAudioRef.current.pause();
+      musicAudioRef.current.src = soundscapeAudio[selectedSoundscape];
+      musicAudioRef.current.load();
+      
+      // Resume playing if it was playing before
+      if (wasPlaying && isRunning && !isPaused) {
+        musicAudioRef.current.play().catch(() => {});
+      }
+    }
+  }, [selectedSoundscape, isRunning, isPaused]);
+
+  // Control music based on timer state
+  useEffect(() => {
+    handleMusicPlayback(isRunning && !isPaused);
+  }, [isRunning, isPaused]);
 
   return (
     <div className="pomodoro-widget">
