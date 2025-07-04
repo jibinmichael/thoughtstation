@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 const COLORS = [
   '#ffffff', '#E6E6FA', '#FFE4E1', '#FFEAA7', '#FDCB6E',
@@ -13,13 +13,6 @@ interface TopColorPickerBarProps {
 
 const TopColorPickerBar: React.FC<TopColorPickerBarProps> = ({ visible, onSelect }) => {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
-
-  // Reset selection when color picker becomes visible
-  useEffect(() => {
-    if (visible) {
-      setSelectedColor(null);
-    }
-  }, [visible]);
 
   const handleColorSelect = (color: string) => {
     setSelectedColor(color);
@@ -41,17 +34,16 @@ const TopColorPickerBar: React.FC<TopColorPickerBarProps> = ({ visible, onSelect
       <div className="circle-panel-content">
         <div className="color-circles">
           {COLORS.map((color, idx) => (
-            <button
-              key={color + idx}
-              className={`color-circle ${selectedColor === color ? 'selected' : ''} ${color === '#ffffff' ? 'border border-gray-200' : ''}`}
-              style={{ 
-                backgroundColor: color, 
-                borderColor: color === '#ffffff' ? '#E5E7EB' : 'transparent',
-                transition: 'all 0.2s ease-in-out',
-              }}
-              onClick={() => handleColorSelect(color)}
-              aria-label={`Pick color ${color}`}
-            />
+                            <button
+                  key={color + idx}
+                  className={`color-circle ${selectedColor === color ? 'selected' : ''} ${color === '#ffffff' ? 'white-color-circle' : ''}`}
+                  style={{ 
+                    backgroundColor: color, 
+                    transition: 'all 0.2s ease-in-out',
+                  }}
+                  onClick={() => handleColorSelect(color)}
+                  aria-label={`Pick color ${color}`}
+                />
           ))}
         </div>
       </div>

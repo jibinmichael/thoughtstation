@@ -28,7 +28,7 @@ export default function Home() {
   // Sticky note icon click handler
   const handleStickyNoteClick = () => {
     setColorPickerVisible(true);
-    setPomodoroVisible(false); // Close timer if open
+    // Removed setPomodoroVisible(false) to keep timer open when opening color picker
   };
 
   // Pomodoro timer icon click handler
@@ -44,14 +44,14 @@ export default function Home() {
     const centerY = window.innerHeight / 2;
     canvasRef.current?.addStickyNote(centerX, centerY, color);
     
-    // Close color picker
+    // Close color picker but keep timer open
     setColorPickerVisible(false);
   };
 
   // Handler for all toolbar columns except sticky note and pomodoro
   const handleToolbarColumnClick = () => {
     setColorPickerVisible(false);
-    setPomodoroVisible(false);
+    // Removed setPomodoroVisible(false) to decouple Pomodoro widget visibility
   };
 
   return (

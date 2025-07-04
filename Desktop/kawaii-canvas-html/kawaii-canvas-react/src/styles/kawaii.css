@@ -331,23 +331,23 @@ input, textarea {
   transition: all 0.2s ease;
 }
 
+/* Specific style for the white color circle's default border */
+.color-circle.white-color-circle {
+  border-color: #E5E7EB;
+}
+
 .color-circle.selected {
-  border-color: #6366F1;
+  border-color: #6366F1 !important;
   border-width: 2px;
+}
+
+/* Ensure white selected also gets the purple border */
+.color-circle.white-color-circle.selected {
+  border-color: #6366F1 !important;
 }
 
 .color-circle:hover {
   transform: scale(1.05);
-}
-
-.color-circle[style*="background-color: rgb(255, 255, 255)"],
-.color-circle[style*="background-color: #ffffff"] {
-  border: 2px solid #E5E7EB;
-}
-
-.color-circle[style*="background-color: rgb(255, 255, 255)"].selected,
-.color-circle[style*="background-color: #ffffff"].selected {
-  border: 2px solid #6366F1;
 }
 
 /* Panel Separator */

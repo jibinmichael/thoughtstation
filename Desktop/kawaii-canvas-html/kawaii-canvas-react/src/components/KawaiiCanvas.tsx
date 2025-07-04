@@ -16,6 +16,7 @@ import {
   ReactFlowInstance,
   BackgroundVariant,
 } from '@xyflow/react';
+import { MouseEvent } from 'react';
 import '@xyflow/react/dist/style.css';
 import KawaiiStickyNoteNode from './KawaiiStickyNoteNode';
 
@@ -55,6 +56,21 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
     // Initialize React Flow instance
     const onInit = useCallback((instance: ReactFlowInstance) => {
       reactFlowInstance.current = instance;
+    }, []);
+
+    // Enhanced drag handlers for better cursor and interaction control
+    const onNodeDragStart = useCallback((event: MouseEvent, node: Node) => {
+      // Ensure node dragging takes precedence over canvas panning
+      if (reactFlowInstance.current) {
+        reactFlowInstance.current.setNodes((nds) =>
+          nds.map((n) => ({ ...n, selected: n.id === node.id }))
+        );
+      }
+    }, []);
+
+    const onNodeDragStop = useCallback((event: MouseEvent, node: Node) => {
+      // Node drag completed, ensure proper state
+      console.log('Node drag stopped:', node.id);
     }, []);
 
     // Add sticky note at specified position
@@ -195,6 +211,8 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onInit={onInit}
+          onNodeDragStart={onNodeDragStart}
+          onNodeDragStop={onNodeDragStop}
           nodeTypes={nodeTypes}
           // Infinite Canvas Settings
           fitView={false}

@@ -63,12 +63,30 @@ body {
   opacity: 1 !important;
 }
 
-/* Consistent cursor for draggable elements */
+/* Enhanced cursor consistency for draggable elements */
 .react-flow__node {
   cursor: grab !important;
 }
 
 .react-flow__node:active {
+  cursor: grabbing !important;
+}
+
+/* Target React Flow's internal draggable classes */
+.react-flow__node.draggable {
+  cursor: grab !important;
+}
+
+.react-flow__node.draggable:active {
+  cursor: grabbing !important;
+}
+
+/* Ensure cursor applies to all draggable nodes */
+.react-flow__node[data-draggable="true"] {
+  cursor: grab !important;
+}
+
+.react-flow__node[data-draggable="true"]:active {
   cursor: grabbing !important;
 }
 
