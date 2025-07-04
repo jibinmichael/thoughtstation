@@ -45,7 +45,6 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
-    const stickyNoteCounter = useRef(0); // Counter for sticky notes
 
     // Handle connection creation (for mind mapping)
     const onConnect = useCallback(
@@ -76,9 +75,12 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
         y: clientY - rect.top,
       });
 
-      // Add offset to prevent stacking - each new note gets a small offset
-      const offsetX = (stickyNoteCounter.current % 3) * 30; // 0, 30, 60 pixels offset
-      const offsetY = Math.floor(stickyNoteCounter.current / 3) * 30; // Every 3rd note moves down
+      // Get current number of sticky notes for offset calculation
+      const currentStickyNotes = nodes.filter(node => node.type === 'kawaiiStickyNote').length;
+      
+      // Add offset to prevent stacking - each new note gets a larger offset
+      const offsetX = (currentStickyNotes % 4) * 50; // 0, 50, 100, 150 pixels offset
+      const offsetY = Math.floor(currentStickyNotes / 4) * 50; // Every 4th note moves down
       
       const finalPosition = {
         x: position.x + offsetX,
@@ -113,8 +115,7 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
       };
 
       setNodes((nds) => [...nds, newNode]);
-      stickyNoteCounter.current += 1; // Increment counter
-    }, [setNodes]);
+    }, [setNodes, nodes]);
 
     // Expose zoom controls to parent (toolbar)
     useImperativeHandle(ref, () => ({
