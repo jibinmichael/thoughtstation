@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kawaii Canvas</title>
+    <link rel="icon" type="image/svg+xml" href="icons/kawaii-icon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Orbitron:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <div class="canvas-container">
+            <div class="canvas-background paper-style-plain">
+                <!-- Kawaii background pattern -->
+                <div class="background-pattern">
+                    <div class="emoji-decoration" style="top: 20px; left: 20px; font-size: 4rem;">🌸</div>
+                    <div class="emoji-decoration" style="top: 160px; right: 128px; font-size: 2.5rem;">☁️</div>
+                    <div class="emoji-decoration" style="bottom: 128px; left: 25%; font-size: 3rem;">🌙</div>
+                    <div class="emoji-decoration" style="bottom: 20px; right: 20px; font-size: 2.5rem;">⭐</div>
+                    <div class="emoji-decoration" style="top: 33%; left: 50%; font-size: 1.875rem;">🍃</div>
+                </div>
+
+                <!-- Clean canvas message -->
+                <div class="canvas-message">
+                    <div class="message-content">
+                        <div class="message-icon">✨</div>
+                        <div class="message-text">Clean canvas ready for your design</div>
+                        <div class="message-subtext">Click the circle to show top toolbar</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Toolbar -->
+        <div class="toolbar-top" id="topToolbar">
+            <div class="circle-panel-content">
+                <!-- Color Circles -->
+                <div class="color-circles">
+                    <button class="color-circle" style="background-color: #ffffff;"></button>
+                    <button class="color-circle" style="background-color: #E6E6FA;"></button>
+                    <button class="color-circle" style="background-color: #FFE4E1;"></button>
+                    <button class="color-circle" style="background-color: #FFEAA7;"></button>
+                    <button class="color-circle" style="background-color: #FDCB6E;"></button>
+                    <button class="color-circle" style="background-color: #A8E6CF;"></button>
+                    <button class="color-circle" style="background-color: #B8C5FF;"></button>
+                    <button class="color-circle" style="background-color: #F8BBD9;"></button>
+                    <button class="color-circle" style="background-color: #B8C5FF;"></button>
+                    <div class="line-separator" style="height: 36px; width: .5px; background-color: #ececec;"></div>
+                    <button class="color-circle" style="background-color: #F8BBD9;"></button>
+                    <button class="color-circle" style="background-color: #B8C5FF;"></button>
+                    <button class="color-circle" style="background-color: #F8BBD9;"></button>
+               
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Toolbar -->
+        <div class="toolbar-bottom">
+            <!-- Zoom Controls -->
+            <div class="zoom-section">
+                <button class="zoom-btn">−</button>
+                <button class="zoom-btn">+</button>
+            </div>
+
+            <!-- Circle - Only functional element -->
+            <div class="circle-section" id="circleButton">
+                <div class="circle" id="circle"></div>
+                <div class="tooltip">Themes</div>
+            </div>
+
+            <!-- All other elements - Just visual, no functionality -->
+            <div class="column marker">
+                <img src="icons/marker-icon.svg" alt="Marker" class="marker-icon">
+                <div class="tooltip">Think with me!</div>
+            </div>
+
+            <div class="column sticky-note">
+                <img src="icons/sticky-note-icon.svg" alt="Sticky Note" class="sticky-note-icon">
+                <div class="tooltip">Sticky Notes</div>
+            </div>
+
+            <div class="column washi-tape">
+                <img src="icons/washi-tape-icon.svg" alt="Washi Tape" class="washi-tape-icon">
+                <div class="tooltip">Focus Timer
+                </div>
+            </div>
+
+            <div class="column todo">
+                <img src="icons/todo-icon.svg" alt="Todo List" class="todo-icon">
+                <div class="tooltip">Play games</div>
+            </div>
+
+            <div class="column sticker">
+                <img src="icons/sticker-icon.svg" alt="Stickers" class="sticker-icon">
+                <div class="tooltip">Stickers</div>
+            </div>
+
+          
+
+            <div class="column image">
+                <img src="icons/image-icon.svg" alt="Add Image" class="image-icon">
+                <div class="tooltip">Photo wall</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
