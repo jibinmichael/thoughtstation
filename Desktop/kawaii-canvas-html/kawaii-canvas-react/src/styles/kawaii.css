@@ -1,0 +1,755 @@
+/* 🎨 Kawaii Canvas - Typography & Core Styles */
+
+/* ============================================
+   CUSTOM FONTS
+   ============================================ */
+
+@font-face {
+  font-family: 'Digital-7';
+  src: url('/fonts/digital-7 (mono).ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* ============================================
+   KEYFRAMES & ANIMATIONS
+   ============================================ */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes wobble {
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(-5deg); }
+  30% { transform: rotate(5deg); }
+  45% { transform: rotate(-3deg); }
+  60% { transform: rotate(3deg); }
+  75% { transform: rotate(-1deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes bounce-soft {
+  0%, 100% { transform: translateY(0%); }
+  50% { transform: translateY(-5%); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ============================================
+   UTILITY ANIMATION CLASSES
+   ============================================ */
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+.wobble-animation {
+  animation: wobble 0.5s ease-in-out;
+}
+
+.bounce-soft-animation {
+  animation: bounce-soft 2s infinite;
+}
+
+.spin-animation {
+  animation: spin 3s linear infinite;
+}
+
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'DM Sans', sans-serif;
+  cursor: default;
+}
+
+input, textarea {
+  cursor: text;
+}
+
+/* ============================================
+   TOOLBAR STYLES
+   ============================================ */
+
+/* Bottom Toolbar */
+.toolbar-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 692px;
+  height: 84px;
+  background: white;
+  border: 1px solid #ececec;
+  border-bottom: none;
+  overflow: visible;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  box-shadow: 0px 4px 6px -4px rgba(27, 29, 28, 0.1),
+              0px 10px 15px -3px rgba(27, 29, 28, 0.1);
+  display: flex;
+  z-index: 100;
+  transition: box-shadow 0.2s ease;
+}
+
+.toolbar-bottom.depth-shadow {
+  box-shadow: 0px 4px 6px -4px rgba(27, 29, 28, 0.1),
+              0px 10px 15px -3px rgba(27, 29, 28, 0.1),
+              0px -2px 4px -1px rgba(27, 29, 28, 0.1);
+}
+
+.toolbar-bottom.panel-active {
+  overflow: visible;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+/* Top Toolbar */
+.toolbar-top {
+  position: fixed;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(calc(-53.8% + 8px)) translateY(100%);
+  width: fit-content;
+  padding: 12px 0;
+  height: 60px;
+  background: white;
+  border: 1px solid #ececec;
+  border-bottom: none;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  box-shadow: 0px 4px 6px -4px rgba(27, 29, 28, 0.1),
+              0px 10px 15px -3px rgba(27, 29, 28, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toolbar-top.active {
+  transform: translateX(calc(-53.75% + 8px)) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Zoom Section */
+.zoom-section {
+  width: 48px;
+  height: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-right: 1px solid #ececec;
+  border-top-left-radius: 12px;
+}
+
+.zoom-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 24px;
+  font-weight: 400;
+  color: #6366F1;
+}
+
+.zoom-btn:hover {
+  background: none;
+}
+
+/* Circle Section */
+.circle-section {
+  width: 92px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #ececec;
+  cursor: pointer;
+  position: relative;
+}
+
+.circle {
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle at 30% 30%, #B5E3E0 0%, #E8E3C8 40%, #F5D5C8 70%, #E0D0F0 100%);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  transition: background-color 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+}
+
+.circle.active {
+  transform: scale(0.9);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+.circle-section:hover .circle {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.circle-section:hover .circle.active {
+  transform: translateY(-4px) scale(0.9);
+}
+
+/* Toolbar Columns */
+.column {
+  width: 92px;
+  height: 84px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.column:last-child {
+  border-top-right-radius: 12px;
+}
+
+.column:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.column:last-child:hover {
+  border-top-right-radius: 12px;
+}
+
+.column.active {
+  background: #f5f5f5;
+}
+
+.column:last-child.active {
+  border-top-right-radius: 12px;
+}
+
+/* Icon Styles */
+.sticky-note-icon,
+.washi-tape-icon,
+.todo-icon,
+.sticker-icon,
+.marker-icon,
+.image-icon {
+  width: 72px;
+  height: 72px;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.column:hover .sticky-note-icon,
+.column:hover .washi-tape-icon,
+.column:hover .todo-icon,
+.column:hover .sticker-icon,
+.column:hover .marker-icon,
+.column:hover .image-icon {
+  transform: translateY(-4px);
+}
+
+/* Tooltip Styles */
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #000;
+  color: #fff;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 1000;
+}
+
+.column:hover .tooltip,
+.circle-section:hover .tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #000;
+}
+
+/* Circle Panel Content */
+.circle-panel-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px;
+}
+
+.color-circles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.color-circle.selected {
+  border-color: #6366F1;
+  border-width: 2px;
+}
+
+.color-circle:hover {
+  transform: scale(1.05);
+}
+
+.color-circle[style*="background-color: rgb(255, 255, 255)"],
+.color-circle[style*="background-color: #ffffff"] {
+  border: 2px solid #E5E7EB;
+}
+
+.color-circle[style*="background-color: rgb(255, 255, 255)"].selected,
+.color-circle[style*="background-color: #ffffff"].selected {
+  border: 2px solid #6366F1;
+}
+
+/* Panel Separator */
+.panel-separator {
+  width: 1px;
+  height: 30px;
+  background: #E5E7EB;
+}
+
+/* Paper Style Circles */
+.paper-style-circles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.paper-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #E5E7EB;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.paper-circle.selected {
+  border-color: #6366F1;
+  border-width: 3px;
+}
+
+.paper-circle:hover {
+  transform: scale(1.05);
+}
+
+.paper-circle.plain {
+  background: white;
+}
+
+.paper-circle.dotted {
+  background: white;
+  background-image: radial-gradient(circle, #D1D5DB 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+
+.paper-circle.striped {
+  background: white;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 6px,
+    #E5E7EB 6px,
+    #E5E7EB 7px
+  );
+}
+
+/* ============================================
+   KAWAII COMPONENT STYLES
+   ============================================ */
+
+/* Tooltips */
+.kawaii-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #000;
+  color: #fff;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 1000;
+}
+
+.kawaii-tooltip.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+.kawaii-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #000;
+}
+
+/* Kawaii Buttons */
+.kawaii-button {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: none;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.kawaii-button:hover {
+  transform: translateY(-2px);
+}
+
+.kawaii-button:active {
+  transform: translateY(0);
+}
+
+/* Kawaii Circle */
+.kawaii-circle {
+  background: radial-gradient(circle at 30% 30%, #B5E3E0 0%, #E8E3C8 40%, #F5D5C8 70%, #E0D0F0 100%);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  transition: background-color 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+}
+
+.kawaii-circle:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.kawaii-circle.active {
+  transform: scale(0.9);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+.kawaii-circle:hover.active {
+  transform: translateY(-4px) scale(0.9);
+}
+
+/* Color Circles */
+.kawaii-color-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.kawaii-color-circle:hover {
+  transform: scale(1.05);
+}
+
+.kawaii-color-circle.selected {
+  border-color: #6366F1;
+  border-width: 2px;
+}
+
+/* Special styling for white color circle */
+.kawaii-color-circle.white {
+  border: 2px solid #E5E7EB;
+}
+
+.kawaii-color-circle.white.selected {
+  border: 2px solid #6366F1;
+}
+
+/* Paper Style Circles */
+.kawaii-paper-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #E5E7EB;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.kawaii-paper-circle:hover {
+  transform: scale(1.05);
+}
+
+.kawaii-paper-circle.selected {
+  border-color: #6366F1;
+  border-width: 3px;
+}
+
+.kawaii-paper-circle.plain {
+  background: white;
+}
+
+.kawaii-paper-circle.dotted {
+  background: white;
+  background-image: radial-gradient(circle, #D1D5DB 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+
+.kawaii-paper-circle.striped {
+  background: white;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 6px,
+    #E5E7EB 6px,
+    #E5E7EB 7px
+  );
+}
+
+/* ============================================
+   CANVAS BACKGROUND PATTERNS
+   ============================================ */
+
+.kawaii-canvas-plain {
+  background-image: none;
+}
+
+.kawaii-canvas-dotted {
+  background-image: radial-gradient(circle, rgba(0,0,0,0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.kawaii-canvas-striped {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 20px,
+    rgba(0,0,0,0.03) 20px,
+    rgba(0,0,0,0.03) 21px
+  );
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+  .toolbar-bottom {
+    width: 90%;
+    max-width: 692px;
+  }
+  
+  .toolbar-top {
+    width: 90%;
+    max-width: 520px;
+  }
+  
+  .column {
+    width: calc(100% / 6);
+    min-width: 60px;
+  }
+  
+  .zoom-section {
+    width: calc(100% / 14);
+    min-width: 40px;
+  }
+  
+  .circle-section {
+    width: calc(100% / 7);
+    min-width: 60px;
+  }
+  
+  .kawaii-responsive-width {
+    width: 90%;
+    max-width: 692px;
+  }
+  
+  .kawaii-responsive-column {
+    width: calc(100% / 6);
+    min-width: 60px;
+  }
+  
+  .kawaii-responsive-zoom {
+    width: calc(100% / 14);
+    min-width: 40px;
+  }
+  
+  .kawaii-responsive-circle {
+    width: calc(100% / 7);
+    min-width: 60px;
+  }
+}
+
+/* ============================================
+   TYPOGRAPHY UTILITIES
+   ============================================ */
+
+.kawaii-text-primary {
+  font-family: 'DM Sans', sans-serif;
+}
+
+.kawaii-text-digital {
+  font-family: 'Digital-7', 'JetBrains Mono', monospace;
+}
+
+.kawaii-text-display {
+  font-family: 'Inter', sans-serif;
+}
+
+.kawaii-text-orbitron {
+  font-family: 'Orbitron', monospace;
+}
+
+.kawaii-text-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ============================================
+   THEME VARIABLES
+   ============================================ */
+
+:root {
+  --kawaii-primary: #6366F1;
+  --kawaii-primary-light: rgba(99, 102, 241, 0.3);
+  --kawaii-primary-shadow: rgba(99, 102, 241, 0.2);
+  
+  --kawaii-canvas-bg: #ffffff;
+  --kawaii-canvas-bg-alt: #f5f5f5;
+  
+  --kawaii-toolbar-bg: #ffffff;
+  --kawaii-toolbar-border: #ececec;
+  --kawaii-toolbar-hover: rgba(0, 0, 0, 0.04);
+  --kawaii-toolbar-active: #f5f5f5;
+  
+  --kawaii-shadow-light: rgba(27, 29, 28, 0.1);
+  --kawaii-shadow-medium: rgba(0, 0, 0, 0.1);
+  --kawaii-shadow-heavy: rgba(0, 0, 0, 0.15);
+  
+  --kawaii-gray-200: #E5E7EB;
+  --kawaii-gray-300: #D1D5DB;
+  --kawaii-gray-400: rgb(156, 163, 175);
+  
+  --kawaii-transition-fast: 0.2s ease;
+  --kawaii-transition-medium: 0.3s ease;
+  --kawaii-transition-transform: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --kawaii-transition-toolbar: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.kawaii-shadow-toolbar {
+  box-shadow: 0px 4px 6px -4px rgba(27, 29, 28, 0.1), 0px 10px 15px -3px rgba(27, 29, 28, 0.1);
+}
+
+.kawaii-shadow-toolbar-depth {
+  box-shadow: 0px 4px 6px -4px rgba(27, 29, 28, 0.1), 0px 10px 15px -3px rgba(27, 29, 28, 0.1), 0px -2px 4px -1px rgba(27, 29, 28, 0.1);
+}
+
+.kawaii-shadow-sticky-note {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.kawaii-shadow-sticky-note-hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.kawaii-shadow-sticky-note-focused {
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
+}
+
+.kawaii-border-primary {
+  border: 2px solid #6366F1;
+}
+
+.kawaii-border-gray {
+  border: 2px solid #E5E7EB;
+}
+
+.kawaii-transition-all {
+  transition: all 0.2s ease;
+}
+
+.kawaii-transition-transform {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kawaii-hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+.kawaii-hover-lift-rotate:hover {
+  transform: translateY(-2px) rotate(0.5deg);
+}
+
+.kawaii-hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.kawaii-cursor-move {
+  cursor: move;
+}
+
+.kawaii-cursor-grabbing {
+  cursor: grabbing;
+}
+
+.kawaii-user-select-none {
+  user-select: none;
+}
+
+.kawaii-pointer-events-none {
+  pointer-events: none;
+}
+
+.kawaii-pointer-events-auto {
+  pointer-events: auto;
+} 
