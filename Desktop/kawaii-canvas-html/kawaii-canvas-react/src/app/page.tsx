@@ -15,6 +15,12 @@ export default function Home() {
   
   // State for Pomodoro widget
   const [pomodoroVisible, setPomodoroVisible] = useState(false);
+  
+  // State to track if timer is running (for single timer logic)
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  
+  // State for warning tooltip
+  const [showWarningTooltip, setShowWarningTooltip] = useState(false);
 
   // Zoom button handlers
   const handleZoomIn = () => {
@@ -33,6 +39,14 @@ export default function Home() {
 
   // Pomodoro timer icon click handler
   const handlePomodoroClick = () => {
+    // Check if a timer is already running
+    if (isTimerRunning) {
+      // Show warning tooltip and prevent new timer
+      setShowWarningTooltip(true);
+      setTimeout(() => setShowWarningTooltip(false), 3000);
+      return;
+    }
+    
     setPomodoroVisible(!pomodoroVisible);
     setColorPickerVisible(false); // Close color picker if open
   };
@@ -54,6 +68,17 @@ export default function Home() {
     // Removed setPomodoroVisible(false) to decouple Pomodoro widget visibility
   };
 
+  // Handle timer state changes from PomodoroWidget
+  const handleTimerStateChange = (running: boolean) => {
+    setIsTimerRunning(running);
+  };
+
+  // Handle pomodoro widget close
+  const handlePomodoroClose = () => {
+    setPomodoroVisible(false);
+    setIsTimerRunning(false); // Reset timer running state when widget closes
+  };
+
   return (
     <div className="w-full h-screen relative overflow-hidden">
       {/* React Flow Canvas - The Foundation */}
@@ -71,7 +96,7 @@ export default function Home() {
 
       {/* Pomodoro Widget */}
       {pomodoroVisible && (
-        <PomodoroWidget onClose={() => setPomodoroVisible(false)} />
+        <PomodoroWidget onClose={handlePomodoroClose} onTimerStateChange={handleTimerStateChange} />
       )}
 
       {/* Bottom Toolbar - Overlaying the canvas */}
@@ -111,7 +136,7 @@ export default function Home() {
           <div className="tooltip">Sticky Notes</div>
         </div>
 
-        <div className="column washi-tape" onClick={handlePomodoroClick} style={{ cursor: 'pointer' }}>
+        <div className="column washi-tape" onClick={handlePomodoroClick} style={{ cursor: 'pointer', position: 'relative' }}>
           <Image 
             src="/icons/washi-tape-icon.svg" 
             alt="Washi Tape" 
@@ -119,7 +144,24 @@ export default function Home() {
             height={72}
             className="washi-tape-icon"
           />
-          <div className="tooltip">Focus Timer</div>
+          <div className="tooltip" style={{ display: showWarningTooltip ? 'none' : 'block' }}>Focus Timer</div>
+          {showWarningTooltip && (
+            <div 
+              className="tooltip timer-warning-tooltip"
+              style={{
+                opacity: 1,
+                transform: 'translateX(-50%) translateY(-2px)',
+                pointerEvents: 'none',
+                zIndex: 1000,
+                width: '200px',
+                whiteSpace: 'normal',
+                textAlign: 'center',
+                display: 'block'
+              }}
+            >
+              You have an active timer running, stop it to start a new timer.
+            </div>
+          )}
         </div>
 
         <div className="column todo" onClick={handleToolbarColumnClick} style={{ cursor: 'pointer' }}>

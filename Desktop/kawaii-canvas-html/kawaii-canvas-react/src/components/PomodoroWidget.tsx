@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 
 interface PomodoroWidgetProps {
   onClose: () => void;
+  onTimerStateChange: (running: boolean) => void;
 }
 
-const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ onClose }) => {
+const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ onClose, onTimerStateChange }) => {
   // Timer state
   const [timerSeconds, setTimerSeconds] = useState(300); // 5 minutes default
   const [isRunning, setIsRunning] = useState(false);
@@ -19,6 +20,11 @@ const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ onClose }) => {
   // Audio elements
   const tickAudioRef = useRef<HTMLAudioElement | null>(null);
   const completeAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Notify parent when timer running state changes
+  useEffect(() => {
+    onTimerStateChange(isRunning && !isPaused);
+  }, [isRunning, isPaused, onTimerStateChange]);
 
   // Initialize audio
   useEffect(() => {
