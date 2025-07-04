@@ -41,7 +41,6 @@ const KawaiiStickyNoteNode: React.FC<NodeProps> = ({ data, selected }) => {
 
     // Fixed values for consistent sizing
     const maxCharsPerLine = 18; // 148px width / 8px per char (180px - 32px padding)
-    const maxHeight = 300;
 
     // Font size adjustment based on longest line
     let fontSize = 14;
@@ -72,16 +71,10 @@ const KawaiiStickyNoteNode: React.FC<NodeProps> = ({ data, selected }) => {
     const textHeight = Math.ceil(totalLines * lineHeight);
     const containerHeight = textHeight + 32; // 16px padding top + bottom
 
-    // Apply constraints
-    if (containerHeight <= maxHeight) {
-      container.style.height = `${containerHeight}px`;
-      textarea.style.height = `${textHeight}px`;
-      textarea.style.overflowY = 'hidden';
-    } else {
-      container.style.height = `${maxHeight}px`;
-      textarea.style.height = `${maxHeight - 32}px`;
-      textarea.style.overflowY = 'auto';
-    }
+    // No max height constraint - let it grow naturally
+    container.style.height = `${containerHeight}px`;
+    textarea.style.height = `${textHeight}px`;
+    textarea.style.overflowY = 'hidden'; // Never show scrollbars
   }, []);
 
   // Adjust size when text changes
@@ -183,7 +176,6 @@ const KawaiiStickyNoteNode: React.FC<NodeProps> = ({ data, selected }) => {
         minWidth: 180,
         maxWidth: 180,
         minHeight: 54,
-        maxHeight: 300,
         padding: 16,
         borderRadius: 8,
         boxShadow: selected
