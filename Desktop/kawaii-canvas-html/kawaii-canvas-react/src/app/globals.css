@@ -63,6 +63,15 @@ body {
   opacity: 1 !important;
 }
 
+/* Consistent cursor for draggable elements */
+.react-flow__node {
+  cursor: grab !important;
+}
+
+.react-flow__node:active {
+  cursor: grabbing !important;
+}
+
 /* ============================================
    POMODORO TIMER WIDGET STYLES
    ============================================ */
