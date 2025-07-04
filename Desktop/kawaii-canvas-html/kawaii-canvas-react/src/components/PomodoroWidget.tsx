@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // Soundscape frequencies for Web Audio API
-const soundscapeFrequencies = [0, 200, 300, 250, 150, 400]; // None, Rain, Forest, Ocean, Fire, Birds
+const soundscapeFrequencies = [0, 200, 300, 250, 400]; // None, Rain, Forest, Ocean, Birds
 
 interface PomodoroWidgetProps {
   onClose: () => void;
@@ -150,7 +150,6 @@ const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ onClose, onTimerStateCh
     { name: 'Rain', emoji: '🌧️' },
     { name: 'Forest', emoji: '🌲' },
     { name: 'Ocean', emoji: '🌊' },
-    { name: 'Fire', emoji: '🔥' },
     { name: 'Birds', emoji: '🐦' }
   ];
 
