@@ -75,6 +75,19 @@ class KawaiiCanvas {
                 } 
                 // Check if it's washi-tape column (Pomodoro Timer)
                 else if (column.classList.contains('washi-tape')) {
+                    // Check if a timer is already running
+                    const existingWidget = document.querySelector('.pomodoro-widget');
+                    if (existingWidget) {
+                        // Check if timer is running by looking for visible pause/stop buttons
+                        const pauseBtn = existingWidget.querySelector('.focus-pause-btn');
+                        const isTimerRunning = pauseBtn && pauseBtn.style.display !== 'none';
+                        
+                        if (isTimerRunning) {
+                            // Show warning tooltip and prevent new timer
+                            this.showTimerRunningTooltip(column);
+                            return;
+                        }
+                    }
                     this.createPomodoroWidget();
                     this.closeTopToolbar();
                 }
@@ -211,6 +224,47 @@ class KawaiiCanvas {
         // Remove animation after it completes
         setTimeout(() => {
             element.classList.remove(`${animationType}-animation`);
+        }, 3000);
+    }
+
+    // TIMER RUNNING WARNING: Show tooltip when user tries to start another timer
+    showTimerRunningTooltip(column) {
+        // Remove any existing warning tooltip
+        const existingWarning = document.querySelector('.timer-warning-tooltip');
+        if (existingWarning) {
+            existingWarning.remove();
+        }
+
+        // Hide the regular tooltip while warning is shown
+        const regularTooltip = column.querySelector('.tooltip:not(.timer-warning-tooltip)');
+        if (regularTooltip) {
+            regularTooltip.style.display = 'none';
+        }
+
+        // Create warning tooltip using our existing tooltip style
+        const warningTooltip = document.createElement('div');
+        warningTooltip.className = 'tooltip timer-warning-tooltip';
+        warningTooltip.textContent = 'You have an active timer running, stop it to start a new timer.';
+        warningTooltip.style.opacity = '1';
+        warningTooltip.style.transform = 'translateX(-50%) translateY(-2px)';
+        warningTooltip.style.pointerEvents = 'none';
+        warningTooltip.style.zIndex = '1000';
+        warningTooltip.style.width = '200px'; // Fixed width for rectangle style
+        warningTooltip.style.whiteSpace = 'normal'; // Allow text wrapping
+        warningTooltip.style.textAlign = 'center'; // Center the text
+
+        // Add to the washi-tape column
+        column.appendChild(warningTooltip);
+
+        // Remove tooltip after 3 seconds and restore regular tooltip
+        setTimeout(() => {
+            if (warningTooltip && warningTooltip.parentNode) {
+                warningTooltip.remove();
+            }
+            // Restore the regular tooltip
+            if (regularTooltip) {
+                regularTooltip.style.display = '';
+            }
         }, 3000);
     }
 
@@ -619,14 +673,16 @@ class KawaiiCanvas {
             }
         }
         
+        // +5 MIN BUTTON: Add 5 minutes to timer
         add5MinBtn.addEventListener('click', () => {
             timerSeconds += 300;
-            updateTimerDisplay();
+            updateTimerDisplay(); // This will also update tab title if timer is running
         });
         
-        // Focus Timer Controls
+        // START BUTTON: Begin focus timer (only if not already running)
         startBtn.addEventListener('click', () => {
-            if (timerSeconds === 0) return;
+            if (timerSeconds === 0) return; // Don't start if no time left
+            if (isRunning) return; // PREVENT STARTING ANOTHER TIMER WHEN ONE IS RUNNING
             isRunning = true;
             startBtn.style.display = 'none';
             pauseBtn.style.display = '';
@@ -658,6 +714,7 @@ class KawaiiCanvas {
             }, 1000);
         });
         
+        // PAUSE/RESUME BUTTON: Toggle timer pause state
         pauseBtn.addEventListener('click', () => {
             if (isRunning) {
                 isRunning = false;
@@ -687,6 +744,7 @@ class KawaiiCanvas {
             }
         });
         
+        // STOP BUTTON: Stop timer and reset everything
         stopBtn.addEventListener('click', () => {
             clearInterval(timerInterval);
             timerSeconds = 0;
