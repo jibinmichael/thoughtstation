@@ -40,19 +40,28 @@ const TopColorPickerBar: React.FC<TopColorPickerBarProps> = ({ visible, onSelect
     >
       <div className="circle-panel-content">
         <div className="color-circles">
-          {COLORS.map((color, idx) => (
-            <button
-              key={color + idx}
-              className={`color-circle ${selectedColor === color ? 'selected' : ''} ${color === '#ffffff' ? 'border border-gray-200' : ''}`}
-              style={{ 
-                backgroundColor: color, 
-                borderColor: color === '#ffffff' ? '#E5E7EB' : 'transparent',
-                transition: 'all 0.2s ease-in-out',
-              }}
-              onClick={() => handleColorSelect(color)}
-              aria-label={`Pick color ${color}`}
-            />
-          ))}
+          {COLORS.map((color, idx) => {
+            const isSelected = selectedColor === color;
+            const isWhite = color === '#ffffff';
+            
+            return (
+              <button
+                key={color + idx}
+                className={`color-circle ${isSelected ? 'selected' : ''} ${isWhite ? 'border border-gray-200' : ''}`}
+                style={{ 
+                  backgroundColor: color, 
+                  borderColor: isWhite ? '#E5E7EB' : 'transparent',
+                  borderWidth: isSelected ? '2px' : isWhite ? '2px' : '2px',
+                  borderStyle: 'solid',
+                  transition: 'all 0.2s ease-in-out',
+                  transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+                  boxShadow: isSelected ? '0 0 0 2px rgba(99, 102, 241, 0.3)' : 'none',
+                }}
+                onClick={() => handleColorSelect(color)}
+                aria-label={`Pick color ${color}`}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

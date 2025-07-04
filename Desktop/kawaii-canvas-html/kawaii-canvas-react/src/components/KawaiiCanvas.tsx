@@ -70,23 +70,56 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
 
       // Convert screen coordinates to React Flow coordinates
       const rect = reactFlowWrapper.current.getBoundingClientRect();
-      const position = reactFlowInstance.current.screenToFlowPosition({
+      const centerPosition = reactFlowInstance.current.screenToFlowPosition({
         x: clientX - rect.left,
         y: clientY - rect.top,
       });
 
-      // Get current number of sticky notes for offset calculation
-      const currentStickyNotes = nodes.filter(node => node.type === 'kawaiiStickyNote').length;
-      
-      // Add offset to prevent stacking - each new note gets a larger offset
-      const offsetX = (currentStickyNotes % 4) * 50; // 0, 50, 100, 150 pixels offset
-      const offsetY = Math.floor(currentStickyNotes / 4) * 50; // Every 4th note moves down
-      
-      const finalPosition = {
-        x: position.x + offsetX,
-        y: position.y + offsetY,
+      // Intelligent random placement with collision detection
+      const findNonOverlappingPosition = () => {
+        const stickyNoteWidth = 200; // Approximate width of sticky note
+        const stickyNoteHeight = 150; // Approximate height of sticky note
+        const padding = 20; // Minimum space between notes
+        const maxAttempts = 50;
+        
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          // Generate random offset within a reasonable range
+          const randomAngle = Math.random() * 2 * Math.PI;
+          const randomDistance = 50 + Math.random() * 100; // 50-150px from center
+          
+          const offsetX = Math.cos(randomAngle) * randomDistance;
+          const offsetY = Math.sin(randomAngle) * randomDistance;
+          
+          const candidatePosition = {
+            x: centerPosition.x + offsetX,
+            y: centerPosition.y + offsetY,
+          };
+          
+          // Check if this position overlaps with existing notes
+          const overlaps = nodes.some(node => {
+            if (node.type !== 'kawaiiStickyNote') return false;
+            
+            const distanceX = Math.abs(node.position.x - candidatePosition.x);
+            const distanceY = Math.abs(node.position.y - candidatePosition.y);
+            
+            return distanceX < (stickyNoteWidth + padding) && 
+                   distanceY < (stickyNoteHeight + padding);
+          });
+          
+          if (!overlaps) {
+            return candidatePosition;
+          }
+        }
+        
+        // If no non-overlapping position found, use a fallback with larger offset
+        const fallbackOffset = 200 + Math.random() * 100;
+        return {
+          x: centerPosition.x + (Math.random() - 0.5) * fallbackOffset,
+          y: centerPosition.y + (Math.random() - 0.5) * fallbackOffset,
+        };
       };
 
+      const finalPosition = findNonOverlappingPosition();
       const nodeId = `sticky-${Date.now()}`;
 
       // Create new sticky note node
@@ -176,11 +209,15 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
           // Pan Settings  
           panOnScroll={true}
           panOnDrag={true}
-          // Selection Settings - Ensure single node selection
+          // Selection Settings - Optimized for smooth dragging
           selectNodesOnDrag={false}
           selectionOnDrag={false}
           multiSelectionKeyCode="Shift"
           deleteKeyCode="Delete"
+          // Performance Settings for Smooth Dragging
+          nodesDraggable={true}
+          nodesConnectable={false}
+          elementsSelectable={true}
           // Styling
           style={{
             backgroundColor: '#ffffff',
