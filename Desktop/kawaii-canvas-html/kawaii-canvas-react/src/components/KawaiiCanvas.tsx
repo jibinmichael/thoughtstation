@@ -19,10 +19,13 @@ import {
 import { MouseEvent } from 'react';
 import '@xyflow/react/dist/style.css';
 import KawaiiStickyNoteNode from './KawaiiStickyNoteNode';
+import QuestionStickyNote from './QuestionStickyNote';
+import SessionTitle from './SessionTitle';
 
 // Kawaii Canvas Props
 interface KawaiiCanvasProps {
   className?: string;
+  onZoomChange?: (zoom: number) => void;
 }
 
 // Canvas controls interface for parent components
@@ -33,6 +36,7 @@ export interface KawaiiCanvasHandle {
   fitView: () => void;
   getZoom: () => number;
   addStickyNote: (clientX: number, clientY: number, color: string) => void;
+  createQuestionSession: (userInput: string, questions: string[]) => void;
 }
 
 // Initial empty state - ready for mind mapping
@@ -41,7 +45,7 @@ const initialEdges: Edge[] = [];
 
 // Main Canvas Component
 const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
-  ({ className = '' }, ref) => {
+  ({ className = '', onZoomChange }, ref) => {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
@@ -56,7 +60,20 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
     // Initialize React Flow instance
     const onInit = useCallback((instance: ReactFlowInstance) => {
       reactFlowInstance.current = instance;
-    }, []);
+      // Zoom out initially for better overview
+      setTimeout(() => {
+        instance.zoomTo(0.7);
+        onZoomChange?.(0.7);
+      }, 100);
+    }, [onZoomChange]);
+
+    // Handle zoom changes
+    const onMove = useCallback(() => {
+      if (reactFlowInstance.current && onZoomChange) {
+        const zoom = reactFlowInstance.current.getZoom();
+        onZoomChange(zoom);
+      }
+    }, [onZoomChange]);
 
     // Enhanced drag handlers for better cursor and interaction control
     const onNodeDragStart = useCallback((event: MouseEvent, node: Node) => {
@@ -166,6 +183,78 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
       setNodes((nds) => [...nds, newNode]);
     }, [setNodes, nodes]);
 
+    // Create question session with sticky notes arranged in loose rows/columns
+    const createQuestionSession = useCallback((userInput: string, questions: string[]) => {
+      if (!reactFlowInstance.current) return;
+
+      // Colors for randomization
+      const colors = ['#FFE4E1', '#E6E6FA', '#FFEAA7', '#A8E6CF', '#B8C5FF', '#F8BBD9'];
+      
+      // Clear existing nodes
+      setNodes([]);
+      setEdges([]);
+
+      // Create session title node
+      const titleNode = {
+        id: 'session-title',
+        type: 'sessionTitle',
+        position: { x: 50, y: 20 }, // Top-left position
+        data: {
+          title: userInput,
+        },
+        draggable: true,
+        selectable: true,
+      };
+
+      // Arrange question notes in loose rows/columns (3-4 per row)
+      const notesPerRow = 3;
+      const baseX = 300; // Start after title space
+      const baseY = 120; // Start below title
+      const xSpacing = 220; // Base spacing between columns
+      const ySpacing = 180; // Base spacing between rows
+      const randomOffset = 30; // Random offset for natural arrangement
+
+      const questionNodes = questions.map((question, index) => {
+        const row = Math.floor(index / notesPerRow);
+        const col = index % notesPerRow;
+        
+        // Add random offset for natural whiteboard feel
+        const randomX = (Math.random() - 0.5) * randomOffset;
+        const randomY = (Math.random() - 0.5) * randomOffset;
+        
+        return {
+          id: `question-${index}`,
+          type: 'questionStickyNote',
+          position: {
+            x: baseX + (col * xSpacing) + randomX,
+            y: baseY + (row * ySpacing) + randomY,
+          },
+          data: {
+            question: question,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            answer: '',
+            onChange: (answer: string) => {
+              setNodes((nds) =>
+                nds.map((node) =>
+                  node.id === `question-${index}`
+                    ? { ...node, data: { ...node.data, answer } }
+                    : node
+                )
+              );
+            },
+            onDelete: () => {
+              setNodes((nds) => nds.filter((node) => node.id !== `question-${index}`));
+            },
+          },
+          draggable: true,
+          selectable: true,
+        };
+      });
+
+      // Set all nodes (title + questions)
+      setNodes([titleNode, ...questionNodes]);
+    }, [setNodes, setEdges]);
+
     // Expose zoom controls to parent (toolbar)
     useImperativeHandle(ref, () => ({
       zoomIn: () => {
@@ -192,11 +281,14 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
         return reactFlowInstance.current?.getZoom() || 1;
       },
       addStickyNote,
-    }), [addStickyNote]);
+      createQuestionSession,
+    }), [addStickyNote, createQuestionSession]);
 
     // Custom node types
     const nodeTypes = {
       kawaiiStickyNote: KawaiiStickyNoteNode,
+      questionStickyNote: QuestionStickyNote,
+      sessionTitle: SessionTitle,
     };
 
     return (
@@ -211,6 +303,7 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onInit={onInit}
+          onMove={onMove}
           onNodeDragStart={onNodeDragStart}
           onNodeDragStop={onNodeDragStop}
           nodeTypes={nodeTypes}

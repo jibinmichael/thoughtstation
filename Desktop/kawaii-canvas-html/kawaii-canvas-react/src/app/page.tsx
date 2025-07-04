@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import KawaiiCanvas, { KawaiiCanvasHandle } from "../components/KawaiiCanvas";
 import TopColorPickerBar from "../components/TopColorPickerBar";
 import PomodoroWidget from "../components/PomodoroWidget";
+import AIWidget from "../components/AIWidget";
 
 export default function Home() {
   // Reference to the canvas for zoom controls
@@ -16,11 +17,20 @@ export default function Home() {
   // State for Pomodoro widget
   const [pomodoroVisible, setPomodoroVisible] = useState(false);
   
+  // State for AI widget
+  const [aiWidgetVisible, setAiWidgetVisible] = useState(false);
+  
+  // State to track if canvas has content
+  const [hasCanvasContent, setHasCanvasContent] = useState(false);
+  
   // State to track if timer is running (for single timer logic)
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   
   // State for warning tooltip
   const [showWarningTooltip, setShowWarningTooltip] = useState(false);
+
+  // State for zoom level
+  const [zoomLevel, setZoomLevel] = useState(0.7);
 
   // Zoom button handlers
   const handleZoomIn = () => {
@@ -35,6 +45,12 @@ export default function Home() {
   const handleStickyNoteClick = () => {
     setColorPickerVisible(true);
     // Removed setPomodoroVisible(false) to keep timer open when opening color picker
+  };
+
+  // AI widget (Think with me) icon click handler
+  const handleAIWidgetClick = () => {
+    setAiWidgetVisible(!aiWidgetVisible);
+    setColorPickerVisible(false); // Close color picker if open
   };
 
   // Pomodoro timer icon click handler
@@ -58,11 +74,18 @@ export default function Home() {
     const centerY = window.innerHeight / 2;
     canvasRef.current?.addStickyNote(centerX, centerY, color);
     
+    // Mark canvas as having content and hide AI widget if it was shown by default
+    setHasCanvasContent(true);
+    if (!aiWidgetVisible) {
+      // Only hide if user hasn't manually opened it
+      setAiWidgetVisible(false);
+    }
+    
     // Close color picker but keep timer open
     setColorPickerVisible(false);
   };
 
-  // Handler for all toolbar columns except sticky note and pomodoro
+  // Handler for all toolbar columns except sticky note, pomodoro, and AI widget
   const handleToolbarColumnClick = () => {
     setColorPickerVisible(false);
     // Removed setPomodoroVisible(false) to decouple Pomodoro widget visibility
@@ -79,12 +102,28 @@ export default function Home() {
     setIsTimerRunning(false); // Reset timer running state when widget closes
   };
 
+
+
+  // Handle zoom changes
+  const handleZoomChange = (zoom: number) => {
+    setZoomLevel(zoom);
+  };
+
+  // Effect to manage AI widget visibility based on canvas content
+  useEffect(() => {
+    // If canvas becomes empty again, show AI widget by default
+    if (!hasCanvasContent && !aiWidgetVisible) {
+      setAiWidgetVisible(true);
+    }
+  }, [hasCanvasContent, aiWidgetVisible]);
+
   return (
     <div className="w-full h-screen relative overflow-hidden">
       {/* React Flow Canvas - The Foundation */}
       <div className="absolute inset-0">
         <KawaiiCanvas 
           ref={canvasRef}
+          onZoomChange={handleZoomChange}
         />
       </div>
 
@@ -97,6 +136,19 @@ export default function Home() {
       {/* Pomodoro Widget */}
       {pomodoroVisible && (
         <PomodoroWidget onClose={handlePomodoroClose} onTimerStateChange={handleTimerStateChange} />
+      )}
+
+      {/* AI Widget */}
+      {aiWidgetVisible && (
+        <AIWidget
+          onClose={() => setAiWidgetVisible(false)}
+          onCreateQuestionSession={(userInput, questions) => {
+            canvasRef.current?.createQuestionSession(userInput, questions);
+            setHasCanvasContent(true); // Mark canvas as having content
+            setAiWidgetVisible(false); // Hide AI widget after generating session
+          }}
+          zoomLevel={zoomLevel}
+        />
       )}
 
       {/* Bottom Toolbar - Overlaying the canvas */}
@@ -114,7 +166,7 @@ export default function Home() {
         </div>
 
         {/* Toolbar Columns */}
-        <div className="column marker" onClick={handleToolbarColumnClick} style={{ cursor: 'pointer' }}>
+        <div className="column marker" onClick={handleAIWidgetClick} style={{ cursor: 'pointer' }}>
           <Image 
             src="/icons/marker-icon.svg" 
             alt="Marker" 

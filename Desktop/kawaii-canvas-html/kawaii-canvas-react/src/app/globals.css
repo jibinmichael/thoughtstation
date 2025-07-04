@@ -294,7 +294,7 @@ body {
   position: relative;
   width: 112px;
   height: 112px;
-  overflow: hidden;
+  overflow: visible;
   background-color: #111;
   border: 1px solid #111;
   border-radius: 50%;
@@ -458,7 +458,7 @@ body {
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 11px;
-  white-space: nowrap;
+  white-space: normal;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s, transform 0.2s;
@@ -586,4 +586,558 @@ body {
 .focus-stop-btn:active {
   box-shadow: none;
   transform: none;
+}
+
+/* ============================================
+   AI WIDGET STYLES
+   ============================================ */
+
+.ai-widget {
+  transform-origin: top left;  position: fixed;
+  width: 190px;
+  min-height: 240px;
+  max-height: 320px;
+  background: white;
+  border: 1px solid #ececec;
+  border-radius: 12px !important;
+  box-shadow: 0px 2px 4px -2px rgba(27, 29, 28, 0.10), 0px 4px 6px -1px rgba(27, 29, 28, 0.10);
+  font-family: 'DM Sans', sans-serif;
+  z-index: 10;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  transform-origin: top left;
+}
+
+.ai-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #ececec;
+  flex-shrink: 0;
+}
+
+.ai-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.ai-close-btn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 20px;
+  font-weight: 300;
+  transition: color 0.2s ease;
+  border-radius: 50%;
+  line-height: 1;
+  padding: 0;
+}
+
+.ai-close-btn:hover {
+  color: #333;
+}
+
+.ai-body {
+  padding: 16px 12px 0 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.ai-input-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ai-textarea {
+  width: 100%;
+  flex: 1;
+  min-height: 120px;
+  max-height: 240px;
+  padding: 16px;
+  border: 1px solid #ececec;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #333;
+  background: #F5F5F5;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.ai-textarea:focus {
+  border-color: #8D4BF6;
+  background: white;
+}
+
+.ai-textarea::placeholder {
+  color: #999;
+  font-style: normal;
+  font-size: 11px;
+}
+
+.ai-footer {
+  padding: 12px 12px 16px 12px;
+  border-top: 1px solid #ececec;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ai-think-btn {
+  padding: 8px;
+  background: #8D4BF6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+  box-shadow: none;
+  width: auto;
+}
+
+.ai-think-btn:hover:not(:disabled) {
+  background: #7a3be0;
+  box-shadow: none;
+  transform: none;
+}
+
+.ai-think-btn:disabled {
+  background: #d0d0d0;
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.ai-think-btn:active:not(:disabled) {
+  box-shadow: none;
+  transform: none;
+}
+
+/* ============================================
+   KANBAN SECTION STYLES
+   ============================================ */
+
+.kanban-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.08);
+  font-family: 'DM Sans', sans-serif;
+  width: 280px;
+  min-height: 200px;
+  overflow: visible;
+}
+
+.kanban-header {
+  padding: 12px 16px;
+  border-radius: 12px 12px 0 0;
+  position: relative;
+}
+
+.kanban-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+  text-align: left;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.kanban-questions {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kanban-question-card {
+  background: #fafafa;
+  border: 1px solid #ececec;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kanban-question-card:hover {
+  background: #f0f0f0;
+  border-color: #8D4BF6;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(141, 75, 246, 0.15);
+}
+
+.question-text {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #333;
+  flex: 1;
+}
+
+.question-expand-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.kanban-question-card:hover .question-expand-btn {
+  opacity: 1;
+}
+
+.question-expand-btn:hover {
+  background: #e0e0e0;
+}
+
+.question-expand-btn svg {
+  display: block;
+}
+
+/* ============================================
+   THINKING CONTAINER STYLES (CORRECT VERSION)
+   ============================================ */
+
+.thinking-container {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'DM Sans', sans-serif;
+  width: 800px;
+  min-height: 500px;
+  overflow: visible;
+}
+
+.thinking-header {
+  background: #A8E6CF;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 12px 12px 0 0;
+}
+
+.thinking-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.thinking-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.thinking-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.thinking-body {
+  display: flex;
+  padding: 20px;
+  gap: 20px;
+  min-height: 400px;
+}
+
+/* Left Side: AI Widget */
+.thinking-ai-widget {
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ai-quick-question {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.quick-question-icon {
+  font-size: 16px;
+}
+
+.quick-question-text {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.quick-question-input textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  resize: none;
+  outline: none;
+  background: #f8f8f8;
+  transition: border-color 0.2s ease;
+}
+
+.quick-question-input textarea:focus {
+  border-color: #8D4BF6;
+  background: white;
+}
+
+.quick-question-input textarea::placeholder {
+  color: #999;
+  font-size: 11px;
+}
+
+.ask-it-btn {
+  background: #A8E6CF;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ask-it-btn:hover:not(:disabled) {
+  background: #95d9b8;
+}
+
+.ask-it-btn:disabled {
+  background: #d0d0d0;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Right Side: Questions Grid */
+.thinking-questions-grid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.question-row {
+  display: flex;
+  gap: 12px;
+}
+
+.question-sticky-note {
+  flex: 1;
+  min-height: 120px;
+  background: #A8E6CF;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.question-sticky-note:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.sticky-note-content {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #2d5a3d;
+  font-weight: 500;
+}
+
+/* ============================================
+   QUESTION STICKY NOTE STYLES
+   ============================================ */
+
+.question-sticky-note {
+  width: 200px;
+  min-height: 150px;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'DM Sans', sans-serif;
+  position: relative;
+  cursor: grab;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.question-sticky-note:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.question-sticky-note.selected {
+  border: 2px solid #8D4BF6;
+  box-shadow: 0 0 0 2px rgba(141, 75, 246, 0.2);
+}
+
+.question-text {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #2d3748;
+  margin-bottom: 8px;
+  user-select: none;
+}
+
+.answer-textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  resize: none;
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #4a5568;
+  min-height: 20px;
+  transition: all 0.2s ease;
+  cursor: text;
+  pointer-events: auto;
+}
+
+.answer-textarea.invisible {
+  opacity: 0.3;
+  height: 20px;
+  min-height: 20px;
+  padding: 4px 0;
+  margin: 4px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.answer-textarea.visible {
+  opacity: 1;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  padding-bottom: 4px;
+  margin-top: 4px;
+}
+
+.answer-textarea::placeholder {
+  color: #a0aec0;
+  font-style: italic;
+  font-size: 11px;
+}
+
+/* ============================================
+   THINKING SESSION CONTAINER STYLES
+   ============================================ */
+
+.thinking-session-container {
+  background: rgba(168, 230, 207, 0.1); /* Lightest green background */
+  border: 2px solid #A8E6CF; /* Medium dark green border */
+  border-radius: 16px;
+  padding: 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  font-family: 'DM Sans', sans-serif;
+  cursor: grab;
+  transition: box-shadow 0.2s ease;
+}
+
+.thinking-session-container:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.thinking-session-container:active {
+  cursor: grabbing;
+}
+
+/* Question Note Wrapper Styles */
+.question-note-wrapper {
+  transition: transform 0.1s ease;
+}
+
+.question-note-wrapper:hover {
+  transform: scale(1.02);
+}
+
+.question-note-wrapper:active {
+  cursor: grabbing !important;
+  transform: scale(0.98);
+}
+
+/* ============================================
+   SESSION TITLE STYLES
+   ============================================ */
+
+.session-title {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: grab;
+  user-select: none;
+}
+
+.session-title:active {
+  cursor: grabbing;
+}
+
+.session-title-text {
+  line-height: 1.3; /* Better line spacing for wrapped text */  font-family: var(--font-kalam), 'Kalam', cursive, 'Comic Sans MS', cursive; /* ONLY session title gets handwritten font */ /* ONLY session title gets handwritten font */
+  font-size: 24px; /* Reduced size */
+  font-weight: 400;
+  color: #8B5CF6; /* Purple color matching AI widget theme */
+  margin: 0;
+  padding: 8px 12px;
+  background: transparent; /* Remove background */
+  border: none; /* Remove borders */
+  text-align: left;
+  white-space: normal; /* Allow text wrapping - NOT nowrap */
+  overflow: visible; /* Allow full text to show */
+  text-overflow: initial; /* Don't cut off text */
+  max-width: 400px; /* Smaller max width to encourage wrapping */
+  transition: all 0.2s ease;
+  line-height: 1.3; /* Better line spacing for wrapped text */
+  /* NO text-shadow - clean look */
+}
+
+.session-title-text:hover {
+  transform: translateY(-1px);
+  /* NO text-shadow on hover either */
 }
