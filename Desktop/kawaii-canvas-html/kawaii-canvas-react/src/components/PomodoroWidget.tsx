@@ -1,13 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// Soundscape audio URLs (using royalty-free nature sounds)
-const soundscapeAudio = [
-  'https://www.soundjay.com/misc/sounds/rain-01.wav', // Rain
-  'https://www.soundjay.com/misc/sounds/forest-01.wav', // Forest
-  'https://www.soundjay.com/misc/sounds/ocean-01.wav', // Ocean
-  'https://www.soundjay.com/misc/sounds/fire-01.wav', // Fire
-  'https://www.soundjay.com/misc/sounds/birds-01.wav', // Birds
-];
+// Soundscape frequencies for Web Audio API
+const soundscapeFrequencies = [200, 300, 250, 150, 400]; // Rain, Forest, Ocean, Fire, Birds
 
 interface PomodoroWidgetProps {
   onClose: () => void;
@@ -29,7 +23,9 @@ const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ onClose, onTimerStateCh
   // Audio elements
   const tickAudioRef = useRef<HTMLAudioElement | null>(null);
   const completeAudioRef = useRef<HTMLAudioElement | null>(null);
-  const musicAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const oscillatorRef = useRef<OscillatorNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
 
   // Notify parent when timer running state changes
   useEffect(() => {
@@ -38,27 +34,25 @@ const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ onClose, onTimerStateCh
 
   // Initialize audio
   useEffect(() => {
-    tickAudioRef.current = new Audio('https://www.soundjay.com/misc/sounds/clock-ticking-4.wav');
-    completeAudioRef.current = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.wav');
-    
-    // Initialize music audio with first soundscape
-    musicAudioRef.current = new Audio(soundscapeAudio[0]);
-    
-    if (tickAudioRef.current) tickAudioRef.current.volume = 0.3;
-    if (completeAudioRef.current) completeAudioRef.current.volume = 0.5;
-    if (musicAudioRef.current) {
-      musicAudioRef.current.volume = 0.4;
-      musicAudioRef.current.loop = true; // Loop the music
+    // Initialize Web Audio API
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const AudioContextConstructor = window.AudioContext || (window as any).webkitAudioContext;
+      audioContextRef.current = new AudioContextConstructor();
+    } catch {
+      console.log('Web Audio API not supported');
     }
     
     return () => {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
       }
-      // Stop music when component unmounts
-      if (musicAudioRef.current) {
-        musicAudioRef.current.pause();
-        musicAudioRef.current.currentTime = 0;
+      // Stop audio when component unmounts
+      if (oscillatorRef.current) {
+        oscillatorRef.current.stop();
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
       }
     };
   }, []);
@@ -160,38 +154,60 @@ const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ onClose, onTimerStateCh
   ];
 
   // Music control function
-  const handleMusicPlayback = (shouldPlay: boolean) => {
-    if (!musicAudioRef.current) return;
+  const handleMusicPlayback = useCallback((shouldPlay: boolean) => {
+    if (!audioContextRef.current) return;
     
     if (shouldPlay) {
-      musicAudioRef.current.play().catch(() => {
-        // Handle autoplay restrictions gracefully
-        console.log('Music autoplay blocked by browser');
-      });
+      // Stop any existing oscillator
+      if (oscillatorRef.current) {
+        oscillatorRef.current.stop();
+      }
+      
+      // Create new oscillator and gain node
+      oscillatorRef.current = audioContextRef.current.createOscillator();
+      gainNodeRef.current = audioContextRef.current.createGain();
+      
+      // Connect nodes
+      oscillatorRef.current.connect(gainNodeRef.current);
+      gainNodeRef.current.connect(audioContextRef.current.destination);
+      
+      // Set frequency based on selected soundscape
+      oscillatorRef.current.frequency.setValueAtTime(
+        soundscapeFrequencies[selectedSoundscape], 
+        audioContextRef.current.currentTime
+      );
+      oscillatorRef.current.type = 'sine';
+      
+      // Set volume
+      gainNodeRef.current.gain.setValueAtTime(0.1, audioContextRef.current.currentTime);
+      
+      // Start playing
+      oscillatorRef.current.start();
+      
+      console.log(`Playing soundscape ${selectedSoundscape} at ${soundscapeFrequencies[selectedSoundscape]}Hz`);
     } else {
-      musicAudioRef.current.pause();
+      // Stop playing
+      if (oscillatorRef.current) {
+        oscillatorRef.current.stop();
+        oscillatorRef.current = null;
+      }
+      console.log('Music stopped');
     }
-  };
+  }, [selectedSoundscape]);
 
   // Update music when soundscape changes
   useEffect(() => {
-    if (musicAudioRef.current) {
-      const wasPlaying = !musicAudioRef.current.paused;
-      musicAudioRef.current.pause();
-      musicAudioRef.current.src = soundscapeAudio[selectedSoundscape];
-      musicAudioRef.current.load();
-      
-      // Resume playing if it was playing before
-      if (wasPlaying && isRunning && !isPaused) {
-        musicAudioRef.current.play().catch(() => {});
-      }
+    if (isRunning && !isPaused) {
+      // Restart with new frequency
+      handleMusicPlayback(false);
+      setTimeout(() => handleMusicPlayback(true), 50);
     }
-  }, [selectedSoundscape, isRunning, isPaused]);
+  }, [selectedSoundscape, isRunning, isPaused, handleMusicPlayback]);
 
   // Control music based on timer state
   useEffect(() => {
     handleMusicPlayback(isRunning && !isPaused);
-  }, [isRunning, isPaused]);
+  }, [isRunning, isPaused, handleMusicPlayback]);
 
   return (
     <div className="pomodoro-widget">
