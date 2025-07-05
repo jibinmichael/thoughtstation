@@ -477,7 +477,7 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
         // Add the follow-up node
         setNodes((prevNodes) => [...prevNodes, followUpNode]);
 
-        // Create magical neon glow bezier connection between original and follow-up
+        // Create clean bezier connection between original and follow-up
         const connectionEdge: Edge = {
           id: `edge-${originalQuestionId}-${followUpNodeId}`,
           source: originalQuestionId,
@@ -485,10 +485,9 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
           type: 'bezier',
           style: {
             stroke: '#6366F1',
-            strokeWidth: 3,
+            strokeWidth: 1.5,
             strokeDasharray: '8 4',
-            opacity: 0.8,
-            filter: 'drop-shadow(0 0 6px #6366F1) drop-shadow(0 0 12px #6366F1)',
+            opacity: 0.6,
           },
           animated: false,
           selectable: false,
