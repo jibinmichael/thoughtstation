@@ -1127,6 +1127,23 @@ body {
 }
 
 /* ============================================
+   NEON GLOW EDGE STYLES
+   ============================================ */
+
+.react-flow__edge-path {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.react-flow__edge.react-flow__edge-bezier path {
+  filter: drop-shadow(0 0 6px #6366F1) drop-shadow(0 0 12px #6366F1);
+  transition: filter 0.3s ease;
+}
+
+.react-flow__edge.react-flow__edge-bezier:hover path {
+  filter: drop-shadow(0 0 8px #6366F1) drop-shadow(0 0 16px #6366F1) drop-shadow(0 0 24px #6366F1);
+}
+
+/* ============================================
    SESSION TITLE STYLES
    ============================================ */
 
