@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 
 const COLORS = [
   '#ffffff', '#E6E6FA', '#FFE4E1', '#FFEAA7', '#FDCB6E',
-  '#A8E6CF', '#B8C5FF', '#F8BBD9', '#B8C5FF', '#F8BBD9',
-  '#B8C5FF', '#F8BBD9',
+  '#A8E6CF', '#B8C5FF', '#F8BBD9',
 ];
 
 interface TopColorPickerBarProps {
@@ -27,8 +26,8 @@ const TopColorPickerBar: React.FC<TopColorPickerBarProps> = ({ visible, onSelect
         transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s',
         opacity: visible ? 1 : 0,
         transform: visible
-          ? 'translateX(calc(8px - 54.35%)) translateY(0)'
-          : 'translateX(calc(8px - 54.35%)) translateY(100%)',
+          ? 'translateX(calc(-67.4% + 8px)) translateY(0)'
+          : 'translateX(calc(-67.4% + 8px)) translateY(100%)',
       }}
     >
       <div className="circle-panel-content">

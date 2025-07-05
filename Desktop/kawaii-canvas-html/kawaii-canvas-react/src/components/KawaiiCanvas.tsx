@@ -37,6 +37,7 @@ export interface KawaiiCanvasHandle {
   getZoom: () => number;
   addStickyNote: (clientX: number, clientY: number, color: string) => void;
   createQuestionSession: (userInput: string, questions: string[]) => void;
+  addFollowUpQuestion: (originalQuestionId: string, question: string, answer: string, position: 'top' | 'right' | 'bottom' | 'left') => void;
 }
 
 // Initial empty state - ready for mind mapping
@@ -50,6 +51,9 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
+    
+    // Ref for follow-up function to avoid circular dependency
+    const addFollowUpRef = useRef<((originalQuestionId: string, question: string, answer: string, position: 'top' | 'right' | 'bottom' | 'left') => void) | null>(null);
 
     // Handle connection creation (for mind mapping)
     const onConnect = useCallback(
@@ -190,15 +194,66 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
       // Colors for randomization
       const colors = ['#FFE4E1', '#E6E6FA', '#FFEAA7', '#A8E6CF', '#B8C5FF', '#F8BBD9'];
       
-      // Clear existing nodes
-      setNodes([]);
+      // Remove any existing AI-generated nodes but keep manually added ones
+      setNodes((prevNodes) => prevNodes.filter(node => 
+        node.type !== 'sessionTitle' && node.type !== 'questionStickyNote'
+      ));
       setEdges([]);
 
-      // Create session title node
+      // Helper function to check if position overlaps with existing nodes
+      const isPositionOccupied = (candidatePos: { x: number; y: number }, width: number, height: number) => {
+        const padding = 30; // Minimum space between nodes
+        return nodes.some(node => {
+          // Skip AI-generated nodes since they'll be removed
+          if (node.type === 'sessionTitle' || node.type === 'questionStickyNote') return false;
+          
+          const distanceX = Math.abs(node.position.x - candidatePos.x);
+          const distanceY = Math.abs(node.position.y - candidatePos.y);
+          
+          // Use approximate dimensions for existing nodes
+          const existingWidth = node.type === 'kawaiiStickyNote' ? 180 : 200;
+          const existingHeight = node.type === 'kawaiiStickyNote' ? 150 : 150;
+          
+          return distanceX < (width + existingWidth) / 2 + padding && 
+                 distanceY < (height + existingHeight) / 2 + padding;
+        });
+      };
+
+      // Find non-overlapping position for title
+      const findTitlePosition = () => {
+        const titleWidth = 200;
+        const titleHeight = 40;
+        let attempts = 0;
+        const maxAttempts = 50;
+        
+        // Try preferred position first
+        let candidatePos = { x: 50, y: 20 };
+        if (!isPositionOccupied(candidatePos, titleWidth, titleHeight)) {
+          return candidatePos;
+        }
+        
+        // If preferred position is occupied, try other positions
+        while (attempts < maxAttempts) {
+          candidatePos = {
+            x: 50 + (attempts * 100) % 600, // Spread horizontally
+            y: 20 + Math.floor(attempts / 6) * 80, // Move down after 6 attempts
+          };
+          
+          if (!isPositionOccupied(candidatePos, titleWidth, titleHeight)) {
+            return candidatePos;
+          }
+          attempts++;
+        }
+        
+        // Fallback to far right if all positions occupied
+        return { x: 800, y: 20 };
+      };
+
+      // Create session title node with collision detection
       const titleNode = {
         id: 'session-title',
         type: 'sessionTitle',
-        position: { x: 50, y: 20 }, // Top-left position
+        position: findTitlePosition(),
         data: {
           title: userInput,
         },
@@ -206,7 +261,7 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
         selectable: true,
       };
 
-      // Arrange question notes in loose rows/columns (3-4 per row)
+      // Arrange question notes in loose rows/columns with collision detection
       const notesPerRow = 3;
       const baseX = 300; // Start after title space
       const baseY = 120; // Start below title
@@ -214,46 +269,254 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
       const ySpacing = 180; // Base spacing between rows
       const randomOffset = 30; // Random offset for natural arrangement
 
-      const questionNodes = questions.map((question, index) => {
+      // Create question nodes with proper collision detection against each other
+      const questionNodes: Node[] = [];
+      const allPositions: { x: number; y: number; width: number; height: number }[] = [
+        // Include title position
+        { x: titleNode.position.x, y: titleNode.position.y, width: 200, height: 40 }
+      ];
+
+      questions.forEach((question, index) => {
         const row = Math.floor(index / notesPerRow);
         const col = index % notesPerRow;
         
-        // Add random offset for natural whiteboard feel
-        const randomX = (Math.random() - 0.5) * randomOffset;
-        const randomY = (Math.random() - 0.5) * randomOffset;
+        // Calculate initial position
+        const initialX = baseX + (col * xSpacing);
+        const initialY = baseY + (row * ySpacing);
         
-        return {
-          id: `question-${index}`,
+        // Enhanced collision detection that includes already-placed question nodes
+        const isPositionOccupiedEnhanced = (candidatePos: { x: number; y: number }, width: number, height: number) => {
+          const padding = 30; // Minimum space between nodes
+          
+          // Check against existing nodes (manual sticky notes)
+          const overlapsExisting = nodes.some(node => {
+            if (node.type === 'sessionTitle' || node.type === 'questionStickyNote') return false;
+            
+            const distanceX = Math.abs(node.position.x - candidatePos.x);
+            const distanceY = Math.abs(node.position.y - candidatePos.y);
+            
+            const existingWidth = node.type === 'kawaiiStickyNote' ? 180 : 200;
+            const existingHeight = node.type === 'kawaiiStickyNote' ? 150 : 150;
+            
+            return distanceX < (width + existingWidth) / 2 + padding && 
+                   distanceY < (height + existingHeight) / 2 + padding;
+          });
+          
+          // Check against already-placed question nodes and title in this batch
+          const overlapsNewNodes = allPositions.some(pos => {
+            const distanceX = Math.abs(pos.x - candidatePos.x);
+            const distanceY = Math.abs(pos.y - candidatePos.y);
+            
+            return distanceX < (width + pos.width) / 2 + padding && 
+                   distanceY < (height + pos.height) / 2 + padding;
+          });
+          
+          return overlapsExisting || overlapsNewNodes;
+        };
+        
+        // Find non-overlapping position
+        const findQuestionPosition = () => {
+          const questionWidth = 200;
+          const questionHeight = 150;
+          let attempts = 0;
+          const maxAttempts = 50;
+          
+          while (attempts < maxAttempts) {
+            const randomX = (Math.random() - 0.5) * randomOffset;
+            const randomY = (Math.random() - 0.5) * randomOffset;
+            
+            const candidatePos = {
+              x: initialX + randomX + (attempts * 50), // Spread out on conflicts
+              y: initialY + randomY + (Math.floor(attempts / 10) * 100), // Move down periodically
+            };
+            
+            if (!isPositionOccupiedEnhanced(candidatePos, questionWidth, questionHeight)) {
+              return candidatePos;
+            }
+            attempts++;
+          }
+          
+          // Fallback to far right if all positions occupied
+          return {
+            x: initialX + 400 + (index * 50),
+            y: initialY + (index * 30),
+          };
+        };
+        
+        const position = findQuestionPosition();
+        
+        // Add this position to our tracking array
+        allPositions.push({ x: position.x, y: position.y, width: 200, height: 150 });
+        
+        const questionNodeId = `question-${index}`;
+        const questionNode: Node = {
+          id: questionNodeId,
           type: 'questionStickyNote',
-          position: {
-            x: baseX + (col * xSpacing) + randomX,
-            y: baseY + (row * ySpacing) + randomY,
-          },
+          position,
           data: {
             question: question,
             color: colors[Math.floor(Math.random() * colors.length)],
             answer: '',
+            questionId: questionNodeId,
             onChange: (answer: string) => {
               setNodes((nds) =>
                 nds.map((node) =>
-                  node.id === `question-${index}`
+                  node.id === questionNodeId
                     ? { ...node, data: { ...node.data, answer } }
                     : node
                 )
               );
             },
             onDelete: () => {
-              setNodes((nds) => nds.filter((node) => node.id !== `question-${index}`));
+              setNodes((nds) => nds.filter((node) => node.id !== questionNodeId));
+              // Also remove any edges connected to this node
+              setEdges((eds) => eds.filter((edge) => 
+                edge.source !== questionNodeId && edge.target !== questionNodeId
+              ));
+            },
+            onFollowUp: (originalQuestionId: string, question: string, answer: string, position: 'top' | 'right' | 'bottom' | 'left') => {
+              if (addFollowUpRef.current) {
+                addFollowUpRef.current(originalQuestionId, question, answer, position);
+              }
             },
           },
           draggable: true,
           selectable: true,
         };
+        
+        questionNodes.push(questionNode);
       });
 
-      // Set all nodes (title + questions)
-      setNodes([titleNode, ...questionNodes]);
-    }, [setNodes, setEdges]);
+      // Add new nodes (title + questions) to existing nodes
+      setNodes((prevNodes) => [...prevNodes, titleNode, ...questionNodes]);
+    }, [setNodes, setEdges, nodes]);
+
+    // Add follow-up question based on user's answer
+    const addFollowUpQuestion = useCallback(async (originalQuestionId: string, question: string, answer: string, position: 'top' | 'right' | 'bottom' | 'left') => {
+      try {
+        // Find the original question node
+        const originalNode = nodes.find(node => node.id === originalQuestionId);
+        if (!originalNode) return;
+
+        // Generate follow-up question using AI service
+        // For now, use a simple follow-up - we'll enhance this with AI later
+        const followUpQuestion = `What specifically about "${answer}" makes you feel that way?`;
+        
+        // Calculate position relative to original node
+        const gap = 40;
+        let followUpPosition = { x: 0, y: 0 };
+        
+        switch (position) {
+          case 'top':
+            followUpPosition = {
+              x: originalNode.position.x,
+              y: originalNode.position.y - 150 - gap
+            };
+            break;
+          case 'right':
+            followUpPosition = {
+              x: originalNode.position.x + 200 + gap,
+              y: originalNode.position.y
+            };
+            break;
+          case 'bottom':
+            followUpPosition = {
+              x: originalNode.position.x,
+              y: originalNode.position.y + 150 + gap
+            };
+            break;
+          case 'left':
+            followUpPosition = {
+              x: originalNode.position.x - 200 - gap,
+              y: originalNode.position.y
+            };
+            break;
+        }
+
+        // Create similar color (slightly darker)
+        const originalColor = originalNode.data.color as string;
+        const followUpColor = adjustColorBrightness(originalColor, -0.1);
+
+        // Create follow-up node
+        const followUpNodeId = `followup-${originalQuestionId}-${Date.now()}`;
+        const followUpNode: Node = {
+          id: followUpNodeId,
+          type: 'questionStickyNote',
+          position: followUpPosition,
+          data: {
+            question: followUpQuestion,
+            color: followUpColor,
+            answer: '',
+            questionId: followUpNodeId,
+            onChange: (answer: string) => {
+              setNodes((nds) =>
+                nds.map((node) =>
+                  node.id === followUpNodeId
+                    ? { ...node, data: { ...node.data, answer } }
+                    : node
+                )
+              );
+            },
+            onDelete: () => {
+              setNodes((nds) => nds.filter((node) => node.id !== followUpNodeId));
+              // Also remove any edges connected to this node
+              setEdges((eds) => eds.filter((edge) => 
+                edge.source !== followUpNodeId && edge.target !== followUpNodeId
+              ));
+            },
+            onFollowUp: (originalQuestionId: string, question: string, answer: string, position: 'top' | 'right' | 'bottom' | 'left') => {
+              if (addFollowUpRef.current) {
+                addFollowUpRef.current(originalQuestionId, question, answer, position);
+              }
+            },
+          },
+          draggable: true,
+          selectable: true,
+        };
+
+        // Add the follow-up node
+        setNodes((prevNodes) => [...prevNodes, followUpNode]);
+
+        // Create curved dotted line connection between original and follow-up
+        const connectionEdge: Edge = {
+          id: `edge-${originalQuestionId}-${followUpNodeId}`,
+          source: originalQuestionId,
+          target: followUpNodeId,
+          type: 'smoothstep',
+          style: {
+            stroke: '#6366F1',
+            strokeWidth: 2,
+            strokeDasharray: '8 4',
+            opacity: 0.6,
+          },
+          animated: false,
+          selectable: false,
+        };
+
+        setEdges((prevEdges) => [...prevEdges, connectionEdge]);
+        
+      } catch (error) {
+        console.error('Error creating follow-up question:', error);
+      }
+    }, [nodes, setNodes, setEdges]);
+
+    // Set the ref value
+    addFollowUpRef.current = addFollowUpQuestion;
+
+    // Helper function to adjust color brightness
+    const adjustColorBrightness = (color: string, amount: number) => {
+      // Simple color adjustment - convert hex to rgb, adjust, convert back
+      const hex = color.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      
+      const newR = Math.max(0, Math.min(255, r + (amount * 255)));
+      const newG = Math.max(0, Math.min(255, g + (amount * 255)));
+      const newB = Math.max(0, Math.min(255, b + (amount * 255)));
+      
+      return `#${Math.round(newR).toString(16).padStart(2, '0')}${Math.round(newG).toString(16).padStart(2, '0')}${Math.round(newB).toString(16).padStart(2, '0')}`;
+    };
 
     // Expose zoom controls to parent (toolbar)
     useImperativeHandle(ref, () => ({
@@ -282,7 +545,8 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
       },
       addStickyNote,
       createQuestionSession,
-    }), [addStickyNote, createQuestionSession]);
+      addFollowUpQuestion,
+    }), [addStickyNote, createQuestionSession, addFollowUpQuestion]);
 
     // Custom node types
     const nodeTypes = {
@@ -331,7 +595,7 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
           elementsSelectable={true}
           // Styling
           style={{
-            backgroundColor: '#ffffff',
+            backgroundColor: '#F1F1F1',
           }}
           // Connection Settings for Mind Mapping
           connectionLineStyle={{
@@ -353,7 +617,7 @@ const KawaiiCanvasInternal = forwardRef<KawaiiCanvasHandle, KawaiiCanvasProps>(
             size={2}
             color="rgba(0, 0, 0, 0.15)"
             style={{
-              backgroundColor: '#ffffff',
+              backgroundColor: '#F1F1F1',
             }}
           />
 

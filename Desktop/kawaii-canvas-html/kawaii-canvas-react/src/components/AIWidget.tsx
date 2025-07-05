@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { aiService } from '../utils/aiService';
 
 interface AIWidgetProps {
   onClose: () => void;
@@ -43,9 +44,38 @@ const AIWidget: React.FC<AIWidgetProps> = ({ onClose, onCreateQuestionSession, z
     setUserInput(e.target.value);
   };
 
-  // Generate strategic questions based on user input
-  const generateQuestions = (input: string) => {
-    const questions = [
+  // Generate AI-powered strategic questions based on user input
+  const generateQuestions = async (input: string): Promise<string[]> => {
+    try {
+      // Check if AI is enabled and configured
+      if (!aiService.isEnabled()) {
+        console.log('AI service not enabled, using fallback questions');
+        return getFallbackQuestions(input);
+      }
+
+      // Generate questions using Claude AI
+      const generatedQuestions = await aiService.generateQuestions({
+        userInput: input,
+        context: {
+          previousQuestions: [],
+          previousAnswers: [],
+          sessionTopic: input,
+          insights: [],
+        },
+        questionCount: 8,
+      });
+
+      // Extract just the question text
+      return generatedQuestions.map(q => q.question);
+    } catch (error) {
+      console.error('Error generating AI questions:', error);
+      return getFallbackQuestions(input);
+    }
+  };
+
+  // Fallback questions if AI fails
+  const getFallbackQuestions = (input: string): string[] => {
+    return [
       `What is the real problem you're trying to solve with "${input}"?`,
       "What assumptions are you making about this situation?",
       "How would you explain this challenge to a 5-year-old?",
@@ -54,13 +84,7 @@ const AIWidget: React.FC<AIWidgetProps> = ({ onClose, onCreateQuestionSession, z
       "Which of these causes can you actually control?",
       "What patterns do you notice in similar past situations?",
       "What would need to change for this problem to disappear?",
-      "What would the ideal outcome look like?",
-      "What's the smallest step you could take today?",
-      "Who else has solved a similar problem successfully?",
-      "What resources do you have that you haven't considered?"
     ];
-
-    return questions;
   };
 
   const handleThinkWithMe = async () => {
@@ -68,14 +92,20 @@ const AIWidget: React.FC<AIWidgetProps> = ({ onClose, onCreateQuestionSession, z
     
     setIsLoading(true);
     
-    // Simulate AI processing time
-    setTimeout(() => {
-      const questions = generateQuestions(userInput);
+    try {
+      // Generate AI-powered questions
+      const questions = await generateQuestions(userInput);
       onCreateQuestionSession(userInput, questions);
       setHasGeneratedSession(true);
+    } catch (error) {
+      console.error('Error in think with me:', error);
+      // Use fallback questions on any error
+      const fallbackQuestions = getFallbackQuestions(userInput);
+      onCreateQuestionSession(userInput, fallbackQuestions);
+      setHasGeneratedSession(true);
+    } finally {
       setIsLoading(false);
-      // Don't close the widget - keep it visible for re-generation
-    }, 1500);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

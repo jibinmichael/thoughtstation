@@ -67,6 +67,8 @@ export default function Home() {
     setColorPickerVisible(false); // Close color picker if open
   };
 
+
+
   // Color selection handler - automatically create sticky note
   const handleColorSelect = (color: string) => {
     // Create sticky note at center of viewport
@@ -101,8 +103,6 @@ export default function Home() {
     setPomodoroVisible(false);
     setIsTimerRunning(false); // Reset timer running state when widget closes
   };
-
-
 
   // Handle zoom changes
   const handleZoomChange = (zoom: number) => {
@@ -236,17 +236,6 @@ export default function Home() {
             className="sticker-icon"
           />
           <div className="tooltip">Stickers</div>
-        </div>
-
-        <div className="column image" onClick={handleToolbarColumnClick} style={{ cursor: 'pointer' }}>
-          <Image 
-            src="/icons/image-icon.svg" 
-            alt="Add Image" 
-            width={72} 
-            height={72}
-            className="image-icon"
-          />
-          <div className="tooltip">Photo wall</div>
         </div>
       </div>
 
